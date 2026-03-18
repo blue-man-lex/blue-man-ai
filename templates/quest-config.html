@@ -1,0 +1,67 @@
+<div class="blue-man-quest-config" style="padding: 15px; color: #cbb497; font-family: 'Signika', sans-serif;">
+    
+    <form autocomplete="off" onsubmit="event.preventDefault();">
+        
+        <!-- ДРОП ЗОНА -->
+        <div class="form-group" style="border: 1px dashed #7e6345; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+            <label style="font-weight: bold; font-size: 1.1em; color: #e0d0b8; display: block; margin-bottom: 5px;">
+                <i class="fas fa-book-open"></i> Связанный журнал (Квест)
+            </label>
+            
+            <div class="quest-drop-zone" style="
+                border: 2px dashed #5c4b37; 
+                border-radius: 4px; 
+                padding: 15px; 
+                text-align: center; 
+                background: rgba(0,0,0,0.4); 
+                transition: all 0.2s;
+                min-height: 60px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            ">
+                {{#if questUuid}}
+                    <div style="color: #f1c40f; font-weight: bold; font-size: 1.1em;">
+                        <i class="fas fa-check-circle"></i> {{questName}}
+                    </div>
+                    <div style="font-size: 0.8em; color: #777; margin-top: 5px;">{{questUuid}}</div>
+                    <button class="clear-quest" style="margin-top: 8px; background: #c0392b; border: 1px solid #922b21; color: white; font-size: 0.8em; width: auto; padding: 2px 8px;">
+                        <i class="fas fa-trash"></i> Отвязать
+                    </button>
+                {{else}}
+                    <div style="color: #777; font-style: italic;">
+                        <i class="fas fa-file-import" style="font-size: 1.5em; margin-bottom: 5px; display: block;"></i>
+                        Перетащите журнал сюда
+                    </div>
+                {{/if}}
+            </div>
+        </div>
+
+        <!-- ГАЛОЧКА -->
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+            <input type="checkbox" name="isQuestActive" {{checked isQuestActive}} style="margin: 0; width: 18px; height: 18px;">
+            <div>
+                <label style="font-weight: bold; font-size: 1.1em; color: #e0d0b8;">Включить логику квеста в ИИ</label>
+                <div style="font-size: 0.8em; color: #888;">Если активно, ИИ будет читать текст журнала при каждом ответе.</div>
+            </div>
+        </div>
+
+        <hr style="border-color: #4a3b2a; margin-bottom: 15px;">
+
+        <!-- ИНФО ОБ АРКЕ -->
+        <div class="form-group" style="margin-bottom: 15px; font-size: 0.9em; color: #a68b6b;">
+            <i class="fas fa-globe"></i> <strong>Основная Арка:</strong> 
+            {{#if hasMainArc}}
+                <span style="color: #2ecc71;">Активна</span>
+            {{else}}
+                <span style="color: #e74c3c;">Не задана</span>
+            {{/if}}
+        </div>
+
+        <button type="submit" style="width: 100%;">
+            <i class="fas fa-save"></i> СОХРАНИТЬ
+        </button>
+
+    </form>
+</div>

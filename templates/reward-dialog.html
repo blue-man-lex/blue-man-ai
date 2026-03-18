@@ -1,0 +1,151 @@
+<div class="blue-man-reward-window" style="
+    background: radial-gradient(circle at center, #1a1510 0%, #050505 100%); 
+    height: 100%; 
+    display: flex; 
+    flex-direction: column; 
+    color: #cbb497; 
+    font-family: 'Signika', sans-serif;
+    border: 1px solid #4a3b2a;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+">
+    
+    <!-- ЗАГОЛОВОК -->
+    <div class="reward-header" style="
+        text-align: center; 
+        border-bottom: 2px solid #7e6345; 
+        padding: 15px 0; 
+        margin-bottom: 10px;
+        background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(74, 59, 42, 0.4) 50%, rgba(0,0,0,0) 100%);
+    ">
+        <h2 style="
+            margin: 0; 
+            color: #f1c40f; 
+            font-family: 'Modesto Condensed', serif; 
+            font-size: 2em;
+            text-shadow: 0 0 5px #000;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        ">
+            <i class="fas fa-sack-dollar" style="color: #e67e22;"></i> Награда
+        </h2>
+        <div style="font-size: 0.85em; color: #888; font-style: italic; margin-top: 5px;">
+            Деньги уже в кошеле. <span style="color: #e0d0b8;">Заберите остальное:</span>
+        </div>
+    </div>
+
+    <!-- КОНТЕЙНЕР ДЛЯ СЕТКИ -->
+    <div class="reward-content" style="flex: 1; overflow-y: auto; padding: 0 15px;">
+        
+        <!-- СЕТКА ИНВЕНТАРЯ -->
+        <div class="reward-grid" style="
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 10px; 
+            padding-bottom: 10px;
+        ">
+            {{#each items}}
+            <!-- СЛОТ С ПРЕДМЕТОМ (WOW STYLE) -->
+            <div class="reward-slot claim-item-btn" 
+                 data-index="{{@index}}" 
+                 data-uuid="{{this.uuid}}"
+                 data-name="{{this.name}}"
+                 draggable="true" 
+                 title="{{this.name}} (Нажмите, чтобы забрать)"
+                 style="
+                position: relative;
+                width: 64px;
+                height: 64px;
+                background: #110e0b;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.15s ease-in-out;
+                
+                /* [NEW] ДИНАМИЧЕСКИЙ ЦВЕТ РАМКИ */
+                border: 2px solid {{this.rarityColor}};
+                
+                /* [NEW] СВЕЧЕНИЕ ДЛЯ РЕДКИХ ВЕЩЕЙ */
+                {{#if this.hasGlow}}
+                box-shadow: 0 0 10px {{this.rarityColor}}, inset 0 0 5px {{this.rarityColor}};
+                {{else}}
+                box-shadow: inset 0 0 10px #000;
+                {{/if}}
+            ">
+                <!-- КАРТИНКА -->
+                <img src="{{this.img}}" style="
+                    width: 100%; height: 100%; 
+                    object-fit: cover; 
+                    border: none; 
+                    border-radius: 2px;
+                    filter: drop-shadow(0 0 2px black);
+                ">
+                
+                <!-- КОЛИЧЕСТВО -->
+                {{#if (gt this.qty 1)}}
+                <div style="
+                    position: absolute; 
+                    bottom: 2px; right: 2px; 
+                    background: rgba(0,0,0,0.7); 
+                    color: white; 
+                    font-size: 11px; 
+                    padding: 0 4px; 
+                    border-radius: 3px; 
+                    border: 1px solid #333;
+                ">{{this.qty}}</div>
+                {{/if}}
+            </div>
+            {{else}}
+            <!-- ПУСТОЕ СОСТОЯНИЕ -->
+            <div style="grid-column: 1 / -1; text-align: center; color: #444; padding-top: 30px;">
+                <i class="fas fa-box-open" style="font-size: 3em; opacity: 0.3; margin-bottom: 10px;"></i><br>
+                <span style="font-family: 'Modesto Condensed', serif; font-size: 1.2em;">Сундук пуст</span>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+
+    <!-- ФУТЕР С КНОПКОЙ -->
+    <div class="reward-footer" style="
+        margin-top: auto; 
+        padding: 15px; 
+        border-top: 1px solid #333; 
+        background: rgba(0,0,0,0.3);
+        text-align: center;
+    ">
+        <button class="close-btn" style="
+            background: linear-gradient(180deg, #2b2218 0%, #1a1510 100%);
+            color: #dcbfa6;
+            border: 1px solid #7e6345;
+            box-shadow: inset 0 0 5px rgba(255,255,255,0.05), 0 0 5px #000;
+            font-family: 'Modesto Condensed', serif;
+            font-size: 1.3em;
+            padding: 4px 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: auto;
+            border-radius: 3px;
+        ">
+            <i class="fas fa-check"></i> Готово
+        </button>
+    </div>
+</div>
+
+<style>
+    /* Ховер эффекты */
+    .reward-slot:hover { 
+        transform: translateY(-2px) scale(1.05);
+        z-index: 10;
+        filter: brightness(1.2);
+    }
+    
+    .reward-slot:active {
+        transform: translateY(0);
+        filter: brightness(1.0);
+    }
+
+    /* Кнопка внизу */
+    .blue-man-reward-window .close-btn:hover {
+        background: linear-gradient(180deg, #3d2e20 0%, #2b2218 100%) !important;
+        color: #f1c40f !important;
+        border-color: #f1c40f !important;
+        box-shadow: 0 0 10px rgba(241, 196, 15, 0.2) !important;
+    }
+</style>

@@ -1,0 +1,283 @@
+<form class="{{cssClass}}" autocomplete="off">
+    <nav class="tabs-nav">
+        <a class="item {{#if (eq currentProvider 'gemini')}}active{{/if}}" data-tab="gemini">🔮 Gemini</a>
+        <a class="item {{#if (eq currentProvider 'deepseek')}}active{{/if}}" data-tab="deepseek">🐋 DeepSeek</a>
+        <a class="item {{#if (eq currentProvider 'gpt')}}active{{/if}}" data-tab="gpt">🧠 OpenAI</a>
+        <a class="item {{#if (eq currentProvider 'yandex')}}active{{/if}}" data-tab="yandex">🌐 Yandex</a>
+        <a class="item {{#if (eq currentProvider 'ollama')}}active{{/if}}" data-tab="ollama">💻 Ollama</a>
+        <a class="item {{#if (eq currentProvider 'custom')}}active{{/if}}" data-tab="custom">⚙️ Custom</a>
+    </nav>
+    
+    <section class="content">
+            <!-- GEMINI TAB -->
+            <div class="tab {{#if (eq currentProvider 'gemini')}}active{{/if}}" data-tab="gemini">
+                <div class="provider-header">
+                    <h2>🔮 Google Gemini {{#if (eq currentProvider 'gemini')}}<span class="active-indicator">[АКТИВЕН]</span>{{/if}}</h2>
+                </div>
+                
+                <div class="instruction-box">
+                    <h3>📖 Инструкция по настройке:</h3>
+                    <div class="instruction-text">
+                        1. Перейдите на <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a><br>
+                        2. Создайте новый API ключ<br>
+                        3. Скопируйте и вставьте ключ в поле ниже<br>
+                        4. Укажите модели через запятую (которые вы хотите использовать)
+                    </div>
+                </div>
+                
+                <div class="settings-box">
+                    <h3>⚙️ Настройки:</h3>
+                    
+                    <div class="form-group">
+                        <label>🔑 API Key:</label>
+                        <input type="password" data-provider="gemini" data-key="apiKey" name="apiKey" value="{{gemini.apiKey}}" placeholder="Введите API ключ">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🌍 Ambient API Key (опционально):</label>
+                        <input type="password" data-provider="gemini" data-key="geminiAmbientKey" name="geminiAmbientKey" value="{{gemini.geminiAmbientKey}}" placeholder="Если пусто, используется основной ключ">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🤖 Модели (через запятую):</label>
+                        <input type="text" data-provider="gemini" data-key="aiModels" name="aiModels" value="{{gemini.aiModels}}" placeholder="">
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button type="button" class="set-provider" data-provider="gemini">
+                        <i class="fas fa-star"></i> Сделать активным
+                    </button>
+                    <button type="button" class="test-connection" data-provider="gemini">
+                        <i class="fas fa-plug"></i> Проверить соединение
+                    </button>
+                </div>
+            </div>
+            
+            <!-- DEEPSEEK TAB -->
+            <div class="tab" data-tab="deepseek">
+                <div class="provider-header">
+                    <h2>🐋 DeepSeek {{#if (eq currentProvider 'deepseek')}}<span class="active-indicator">[АКТИВЕН]</span>{{/if}}</h2>
+                </div>
+                
+                <div class="instruction-box">
+                    <h3>📖 Инструкция по настройке:</h3>
+                    <div class="instruction-text">
+                        1. Перейдите на <a href="https://platform.deepseek.com/api_keys" target="_blank">DeepSeek Platform</a><br>
+                        2. Создайте новый API ключ<br>
+                        3. Скопируйте и вставьте ключ в поле ниже
+                    </div>
+                </div>
+                
+                <div class="settings-box">
+                    <h3>⚙️ Настройки:</h3>
+                    
+                    <div class="form-group">
+                        <label>🔑 API Key:</label>
+                        <input type="password" data-provider="deepseek" data-key="deepseekApiKey" name="deepseekApiKey" value="{{deepseek.apiKey}}" placeholder="Введите API ключ">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🤖 Модели (через запятую):</label>
+                        <input type="text" data-provider="deepseek" data-key="deepseekModels" name="deepseekModels" value="{{deepseek.aiModels}}" placeholder="">
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button type="button" class="set-provider" data-provider="deepseek">
+                        <i class="fas fa-star"></i> Сделать активным
+                    </button>
+                    <button type="button" class="test-connection" data-provider="deepseek">
+                        <i class="fas fa-plug"></i> Проверить соединение
+                    </button>
+                </div>
+            </div>
+            
+            <!-- GPT TAB -->
+            <div class="tab {{#if (eq currentProvider 'gpt')}}active{{/if}}" data-tab="gpt">
+                <div class="provider-header">
+                    <h2>🧠 OpenAI {{#if (eq currentProvider 'gpt')}}<span class="active-indicator">[АКТИВЕН]</span>{{/if}}</h2>
+                </div>
+                
+                <div class="instruction-box">
+                    <h3>📖 Инструкция по настройке:</h3>
+                    <div class="instruction-text">
+                        1. Перейдите на <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a><br>
+                        2. Создайте новый API ключ<br>
+                        3. Скопируйте и вставьте ключ в поле ниже
+                    </div>
+                </div>
+                
+                <div class="settings-box">
+                    <h3>⚙️ Настройки:</h3>
+                    
+                    <div class="form-group">
+                        <label>🔑 API Key:</label>
+                        <input type="password" data-provider="gpt" data-key="gptApiKey" name="gptApiKey" value="{{gpt.apiKey}}" placeholder="Введите API ключ">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🤖 Модели (через запятую):</label>
+                        <input type="text" data-provider="gpt" data-key="gptModels" name="gptModels" value="{{gpt.aiModels}}" placeholder="">
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button type="button" class="set-provider" data-provider="gpt">
+                        <i class="fas fa-star"></i> Сделать активным
+                    </button>
+                    <button type="button" class="test-connection" data-provider="gpt">
+                        <i class="fas fa-plug"></i> Проверить соединение
+                    </button>
+                </div>
+            </div>
+            
+            <!-- YANDEX TAB -->
+            <div class="tab {{#if (eq currentProvider 'yandex')}}active{{/if}}" data-tab="yandex">
+                <div class="provider-header">
+                    <h2>🌐 Yandex {{#if (eq currentProvider 'yandex')}}<span class="active-indicator">[АКТИВЕН]</span>{{/if}}</h2>
+                </div>
+                
+                <div class="instruction-box">
+                    <h3>📖 Инструкция по настройке:</h3>
+                    <div class="instruction-text">
+                        1. Создайте сервисный аккаунт в <a href="https://console.cloud.yandex.ru/" target="_blank">Yandex Cloud</a><br>
+                        2. Получите IAM токен и Folder ID<br>
+                        3. Вставьте их в поля ниже
+                    </div>
+                </div>
+                
+                <div class="settings-box">
+                    <h3>⚙️ Настройки:</h3>
+                    
+                    <div class="form-group">
+                        <label>🔑 IAM Token:</label>
+                        <input type="password" data-provider="yandex" data-key="yandexIamToken" name="yandexIamToken" value="{{yandex.iamToken}}" placeholder="Введите IAM токен">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📁 Folder ID:</label>
+                        <input type="text" data-provider="yandex" data-key="yandexFolderId" name="yandexFolderId" value="{{yandex.folderId}}" placeholder="Введите Folder ID">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🤖 Модели (через запятую):</label>
+                        <input type="text" data-provider="yandex" data-key="yandexModels" name="yandexModels" value="{{yandex.aiModels}}" placeholder="">
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button type="button" class="set-provider" data-provider="yandex">
+                        <i class="fas fa-star"></i> Сделать активным
+                    </button>
+                    <button type="button" class="test-connection" data-provider="yandex">
+                        <i class="fas fa-plug"></i> Проверить соединение
+                    </button>
+                </div>
+            </div>
+            
+            <!-- OLLAMA TAB -->
+            <div class="tab {{#if (eq currentProvider 'ollama')}}active{{/if}}" data-tab="ollama">
+                <div class="provider-header">
+                    <h2>💻 Ollama {{#if (eq currentProvider 'ollama')}}<span class="active-indicator">[АКТИВЕН]</span>{{/if}} (Локальная)</h2>
+                </div>
+                
+                <div class="instruction-box">
+                    <h3>📖 Инструкция по настройке:</h3>
+                    <div class="instruction-text">
+                        1. Установите <a href="https://ollama.ai/" target="_blank">Ollama</a> на ваш компьютер<br>
+                        2. Запустите Ollama сервер<br>
+                        3. Укажите URL сервера (обычно <code>http://localhost:11434</code>)
+                    </div>
+                </div>
+                
+                <div class="settings-box">
+                    <h3>⚙️ Настройки:</h3>
+                    
+                    <div class="form-group">
+                        <label>🔗 URL сервера:</label>
+                        <input type="text" data-provider="ollama" data-key="ollamaUrl" name="ollamaUrl" value="{{ollama.url}}" placeholder="http://localhost:11434">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🤖 Модели (через запятую):</label>
+                        <input type="text" data-provider="ollama" data-key="ollamaModels" name="ollamaModels" value="{{ollama.aiModels}}" placeholder="">
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button type="button" class="set-provider" data-provider="ollama">
+                        <i class="fas fa-star"></i> Сделать активным
+                    </button>
+                    <button type="button" class="test-connection" data-provider="ollama">
+                        <i class="fas fa-plug"></i> Проверить соединение
+                    </button>
+                </div>
+            </div>
+            
+            <!-- CUSTOM TAB -->
+            <div class="tab {{#if (eq currentProvider 'custom')}}active{{/if}}" data-tab="custom">
+                <div class="provider-header">
+                    <h2>⚙️ Custom провайдер {{#if (eq currentProvider 'custom')}}<span class="active-indicator">[АКТИВЕН]</span>{{/if}}</h2>
+                </div>
+                
+                <div class="instruction-box">
+                    <h3>📖 Инструкция по настройке:</h3>
+                    <div class="instruction-text">
+                        1. Укажите URL вашего API endpoint<br>
+                        2. Вставьте API ключ (если требуется)<br>
+                        3. Укажите модели через запятую<br>
+                        4. Выберите формат запроса (OpenAI или другой)<br>
+                        5. Настройте дополнительные параметры (опционально)
+                    </div>
+                </div>
+                
+                <div class="settings-box">
+                    <h3>⚙️ Настройки:</h3>
+                    
+                    <div class="form-group">
+                        <label>🌐 API URL:</label>
+                        <input type="text" data-provider="custom" data-key="customUrl" name="customUrl" value="{{custom.url}}" placeholder="https://api.example.com/v1/chat/completions">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🔑 API Key (опционально):</label>
+                        <input type="password" data-provider="custom" data-key="customApiKey" name="customApiKey" value="{{custom.apiKey}}" placeholder="Если не требуется, оставьте пустым">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🤖 Модели (через запятую):</label>
+                        <input type="text" data-provider="custom" data-key="customModels" name="customModels" value="{{custom.aiModels}}" placeholder="gpt-3.5-turbo,gpt-4">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>📋 Формат запроса:</label>
+                        <select data-provider="custom" data-key="customFormat" name="customFormat">
+                            <option value="openai" {{#if (eq custom.customFormat 'openai')}}selected{{/if}}>OpenAI Compatible</option>
+                            <option value="custom" {{#if (eq custom.customFormat 'custom')}}selected{{/if}}>Custom Format</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>⚙️ Доп. параметры (JSON):</label>
+                        <textarea data-provider="custom" data-key="customParams" name="customParams" rows="3" placeholder='{"temperature": 0.7, "max_tokens": 1000}'>{{custom.customParams}}</textarea>
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button type="button" class="set-provider" data-provider="custom">
+                        <i class="fas fa-star"></i> Сделать активным
+                    </button>
+                    <button type="button" class="test-connection" data-provider="custom">
+                        <i class="fas fa-plug"></i> Проверить соединение
+                    </button>
+                </div>
+            </div>
+        </section>
+    
+    <footer class="sheet-footer">
+        <button type="submit">
+            <i class="fas fa-save"></i> Сохранить все настройки
+        </button>
+    </footer>
+</form>

@@ -1,0 +1,90 @@
+<div class="blue-man-quest-log-container">
+    
+    {{#if hasQuests}}
+        {{#each categories}}
+        <div class="quest-category-block">
+            <div class="category-header">
+                <i class="fas fa-map-marked-alt cat-chevron"></i>
+                {{this.name}}
+                <span>({{this.quests.length}})</span>
+            </div>
+
+            <div class="category-quest-list">
+                {{#each this.quests}}
+                <div class="quest-entry {{this.status}} {{this.type}}">
+                    
+                    <div class="quest-header">
+                        
+                        <div>
+                            <i class="fas {{#if this.isActive}}fa-exclamation-circle{{else if this.isCompleted}}fa-check-circle{{else}}fa-times-circle{{/if}}"></i>
+                        </div>
+                        
+                        <div>
+                            <div class="quest-title">
+                                {{this.title}}
+                            </div>
+                            
+                            <div class="quest-preview">
+                                {{this.description}}
+                            </div>
+                        </div>
+
+                        <div class="quest-controls">
+                            <i class="fas fa-chevron-down quest-toggle-icon"></i>
+                            <i class="fas fa-book-open open-journal-btn" data-uuid="{{this.id}}" title="Открыть источник"></i>
+                            {{#if ../../userIsGM}}
+                            <i class="fas fa-check complete-quest-btn" data-uuid="{{this.id}}" title="Успешно завершить (без NPC)" style="color: #2ecc71;"></i>
+                            <i class="fas fa-times fail-quest-btn" data-uuid="{{this.id}}" title="Провалить (без NPC)" style="color: #e74c3c;"></i>
+                            <i class="fas fa-trash-alt delete-quest-btn" data-uuid="{{this.id}}" data-title="{{this.title}}" title="Удалить квест"></i>
+                            {{/if}}
+                        </div>
+                    </div>
+                    
+                    <div class="quest-body">
+                        
+                        <div>
+                            <i class="fas fa-user-circle"></i> {{this.source}}
+                        </div>
+
+                        <div class="quest-description-full">
+                            {{{this.fullText}}}
+                        </div>
+
+                        <div class="quest-rewards-bar">
+                            {{#each this.rewards.currency}}
+                            <div class="reward-badge currency">
+                                <i class="fas {{this.icon}}"></i> {{this.amount}} {{this.type}}
+                            </div>
+                            {{/each}}
+
+                            {{#each this.rewards.items}}
+                            <div class="reward-badge item open-item-btn" data-uuid="{{this.uuid}}">
+                                <i class="fas {{this.icon}}"></i> {{this.name}}
+                            </div>
+                            {{/each}}
+
+                            {{#if this.rewards.text}}
+                            <div class="reward-text">
+                                Награда: {{this.rewards.text}}
+                            </div>
+                            {{/if}}
+
+                            <span class="status-badge">
+                                {{this.statusLabel}}
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        {{/each}}
+    {{else}}
+        <div style="text-align: center; color: #777; margin-top: 100px;">
+            <i class="fas fa-scroll" style="font-size: 64px; opacity: 0.2; margin-bottom: 20px;"></i>
+            <p style="font-size: 1.2em;">Журнал заданий пуст.</p>
+        </div>
+    {{/if}}
+</div>

@@ -1,0 +1,59 @@
+// Blue Man AI - Global Reset Tool
+// Автор: Женя & Алексей
+
+const MOD_ID = 'blue-man-ai';
+
+new Dialog({
+    title: "🧹 Глобальная Очистка (Blue Man AI)",
+    content: `
+        <div style="text-align:center; margin-bottom:10px;">
+            <i class="fas fa-biohazard" style="font-size:3em; color:#c0392b;"></i>
+            <h3>Внимание!</h3>
+            <p>Это действие необратимо удалит данные.</p>
+        </div>
+        <form>
+            <div class="form-group">
+                <input type="checkbox" id="reset-scene-npcs" checked>
+                <label for="reset-scene-npcs">Сбросить всех NPC на текущей сцене (История, Репутация)</label>
+            </div>
+            <div class="form-group">
+                <input type="checkbox" id="reset-quest-log">
+                <label for="reset-quest-log">Очистить Журнал Заданий Группы</label>
+            </div>
+        </form>
+    `,
+    buttons: {
+        yes: {
+            icon: "<i class='fas fa-trash'></i>",
+            label: "СБРОСИТЬ",
+            callback: async (html) => {
+                const resetNpcs = html.find('#reset-scene-npcs')[0].checked;
+                const resetQuests = html.find('#reset-quest-log')[0].checked;
+
+                if (resetNpcs) {
+                    let count = 0;
+                    const tokens = canvas.tokens.placeables.filter(t => t.actor?.type === "npc");
+                    for (const t of tokens) {
+                        await t.document.unsetFlag(MOD_ID, 'chatHistory');
+                        await t.document.unsetFlag(MOD_ID, 'socialStatus');
+                        await t.document.unsetFlag(MOD_ID, 'reputation');
+                        await t.document.unsetFlag(MOD_ID, 'isNameRevealed');
+                        // Квест (привязку) не удаляем, чтобы не настраивать заново
+                        count++;
+                    }
+                    ui.notifications.info(`🧹 Очищена память у ${count} NPC на сцене.`);
+                }
+
+                if (resetQuests) {
+                    await game.settings.set(MOD_ID, "questData", []);
+                    ui.notifications.info("🧹 Журнал заданий очищен.");
+                }
+            }
+        },
+        no: {
+            icon: "<i class='fas fa-times'></i>",
+            label: "Отмена"
+        }
+    },
+    default: "no"
+}).render(true);

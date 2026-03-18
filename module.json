@@ -1,0 +1,39 @@
+{
+  "id": "blue-man-ai",
+  "title": "Blue Man AI",
+  "description": "Интеграция Gemini ИИ для NPC: Живые диалоги, Торговля, Квесты и Оживление мира.",
+  "version": "0.5.15",
+  "compatibility": {
+    "minimum": "12",
+    "verified": "13"
+  },
+  "authors": [
+    {
+      "name": "Art_lex",
+      "url": "",
+      "discord": ""
+    }
+  ],
+  "esmodules": [
+    "scripts/core/main.js"
+  ],
+  "styles": [
+    "styles/style.css"
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "4.0.0"
+        }
+      }
+    ],
+    "requires": [], 
+    "recommends": []
+  },
+  "url": "",
+  "manifest": "",
+  "download": ""
+}
