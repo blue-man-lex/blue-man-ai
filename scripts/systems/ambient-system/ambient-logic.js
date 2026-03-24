@@ -65,7 +65,9 @@ async function processAmbientNpc(npcToken, players) {
     const allowAi = !isEnemy || (hasQuest || hasSecret || isNamed);
 
     if (minDistance <= 5 && allowAi) {
-        const ambientKey = AIProviders.getAmbientApiKey('gemini');
+        const activeProvider = game.settings.get(MOD_ID, "aiProvider") || "gemini";
+        // Пытаемся взять отдельный эмбиент-ключ, если его нет — берем основной ключ провайдера
+        const ambientKey = AIProviders.getAmbientApiKey(activeProvider) || AIProviders.getApiKey(activeProvider);
         
         if (ambientKey) {
             const isMerchant = game.modules.get("item-piles")?.active && 

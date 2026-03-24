@@ -299,6 +299,11 @@ export class AIProviders {
 
         for (const modelName of models) {
             try {
+                const folderId = this.getCachedSetting("yandexFolderId");
+                const uri = folderId ? `gpt://${folderId}/${modelName}` : `gpt://${modelName}`;
+                
+                console.log(`Blue Man AI | Yandex API using modelUri: ${uri} (Folder ID: ${folderId || 'not set'})`);
+                
                 const url = `https://llm.api.cloud.yandex.net/foundationModels/v1/completion`;
                 
                 const response = await fetch(url, {
@@ -308,7 +313,7 @@ export class AIProviders {
                         "Authorization": `Bearer ${iamToken}`
                     },
                     body: JSON.stringify({
-                        modelUri: `gpt://${modelName}`,
+                        modelUri: uri,
                         completionOptions: {
                             maxTokens: "1000",
                             temperature: 0.7
@@ -359,7 +364,8 @@ export class AIProviders {
 
         for (const modelName of models) {
             try {
-                const url = `http://localhost:11434/api/generate`;
+                const baseUrl = this.getCachedSetting("ollamaUrl") || "http://localhost:11434";
+                const url = `${baseUrl.replace(/\/$/, '')}/api/generate`; // Убираем слэш на конце, если юзер его случайно ввел
                 
                 const response = await fetch(url, {
                     method: "POST",

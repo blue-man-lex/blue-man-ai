@@ -210,10 +210,28 @@ export class BlueManDialog extends FormApplication {
 
         const log = html.find('#message-log')[0];
         if (log) {
-            // Если мы были внизу, остаемся внизу (пришло новое сообщение)
-            if (this._isScrolledToBottom !== false) {
-                log.scrollTop = log.scrollHeight;
+            // Прокручиваем вниз, если были внизу, ИЛИ если это первое открытие окна.
+            if (this._isScrolledToBottom !== false || this._isFirstRender === undefined) {
+                this._isFirstRender = false;
+                
+                // Foundry анимирует появление окна. В момент activateListeners
+                // реальная высота может быть еще не рассчитана браузером. 
+                // Делаем надежный тройной вызов для 100% срабатывания:
+                const scrollToBottom = () => {
+                    if (log) log.scrollTop = log.scrollHeight;
+                };
+                
+                scrollToBottom(); // Пытаемся сразу
+                requestAnimationFrame(scrollToBottom); // После отрисовки DOM-кадра браузером
+                setTimeout(scrollToBottom, 150); // Гарантированно после завершения UI-анимации Foundry
             }
+            
+            // Отслеживаем ручной скролл игрока:
+            // Если игрок читает старые сообщения (прокрутил вверх), мы не будем
+            // принудительно кидать его вниз, когда окно перерисуется.
+            log.addEventListener('scroll', () => {
+                this._isScrolledToBottom = log.scrollHeight - log.clientHeight <= log.scrollTop + 10;
+            });
         }
 
         html.find('.player-side .side-portrait').click(ev => {

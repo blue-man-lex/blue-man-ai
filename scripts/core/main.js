@@ -87,9 +87,6 @@ Hooks.once('ready', () => {
 
         // [NEW] Обработка команды показа бабла
         if (action === "showBubble") {
-            // Удаляем сообщение у ГМа, чтобы не засоряло
-            if (game.user.isGM) setTimeout(() => message.delete().catch(()=>{}), 500);
-
             const tokenId = message.getFlag(MOD_ID, "tokenId");
             const text = message.getFlag(MOD_ID, "text");
             const emote = message.getFlag(MOD_ID, "emote"); // true/false
@@ -111,7 +108,6 @@ Hooks.once('ready', () => {
 
         if (action === "forceOpen") {
             const amITarget = message.whisper.includes(game.user.id);
-            if (game.user.isGM) setTimeout(() => message.delete().catch(()=>{}), 500);
 
             if (amITarget) {
                 const npcId = message.getFlag(MOD_ID, "npcTokenId");
@@ -148,7 +144,6 @@ Hooks.once('ready', () => {
 
         if (action === "showQuestOffer") {
             const amITarget = message.whisper.includes(game.user.id);
-            if (game.user.isGM) setTimeout(() => message.delete().catch(()=>{}), 500);
 
             if (amITarget) {
                 const questName = message.getFlag(MOD_ID, "questName");
@@ -191,7 +186,6 @@ Hooks.once('ready', () => {
         
         if (action === "openRewardWindow") {
             const amITarget = message.whisper.includes(game.user.id);
-            if (game.user.isGM) setTimeout(() => message.delete().catch(()=>{}), 500);
 
             if (amITarget) {
                 const tokenId = message.getFlag(MOD_ID, "tokenId");
@@ -206,7 +200,6 @@ Hooks.once('ready', () => {
 
         if (action === "openBoardRewardWindow") {
             const amITarget = message.whisper.includes(game.user.id);
-            if (game.user.isGM) setTimeout(() => message.delete().catch(()=>{}), 500);
 
             if (amITarget) {
                 const actorId = message.getFlag(MOD_ID, "actorId");
@@ -228,8 +221,6 @@ Hooks.once('ready', () => {
         if (!game.user.isGM) return;
 
         if (action === "claimReward") {
-            setTimeout(() => message.delete().catch(()=>{}), 500);
-            
             const tokenId = message.getFlag(MOD_ID, "tokenId");
             const itemIndex = message.getFlag(MOD_ID, "itemIndex");
             const actorId = message.getFlag(MOD_ID, "actorId");
@@ -307,8 +298,6 @@ Hooks.once('ready', () => {
             }
 
             if (flags.action === "claimReward") {
-                setTimeout(() => message.delete().catch(()=>{}), 500);
-                
                 const tokenId = flags.tokenId;
                 const itemIndex = flags.itemIndex;
                 const actorId = flags.actorId;
