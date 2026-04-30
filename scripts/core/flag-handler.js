@@ -420,8 +420,8 @@ export class BlueManFlagHandler {
         
         console.log('Blue Man AI | Claiming item:', itemToClaim.name);
         
-        // Создаем предмет у игрока
-        await actor.createEmbeddedDocuments("Item", [itemToClaim.data]);
+        // Создаем предмет у игрока (со стаканьем)
+        await this.addItemToActor(actor, itemToClaim.data);
         
         // Удаляем предмет из лута
         loot.splice(itemIndex, 1);
@@ -440,8 +440,7 @@ export class BlueManFlagHandler {
 
             if (!npcActor || !playerActor) return;
 
-            if (itemData._id) delete itemData._id;
-            await playerActor.createEmbeddedDocuments("Item", [itemData]);
+            await this.addItemToActor(playerActor, itemData);
 
             if (itemData.originId) {
                 await npcActor.deleteEmbeddedDocuments("Item", [itemData.originId]);
@@ -542,8 +541,7 @@ export class BlueManFlagHandler {
             const actor = tokenDoc.actor;
             if (!actor) return;
 
-            if (itemData._id) delete itemData._id;
-            await actor.createEmbeddedDocuments("Item", [itemData]);
+            await this.addItemToActor(actor, itemData);
             
             await ChatMessage.create({
                 speaker: ChatMessage.getSpeaker({ actor: actor }),
@@ -756,11 +754,11 @@ export class BlueManFlagHandler {
             let response = await callGemini(userText, npcData, { socialStatus: socialStatus, isWhisper: dialogInstance.isWhisperingState, languageInfo: { hasShared: true } }, history);
             
             let opinionDelta = 0;
-            const opinionRegex = /\[OPINION:\s*([+-]?\d+)\]/i;
-            const opinionMatch = response.match(opinionRegex);
+            const opinionRegex = /\[OPINION:?\s*([+-]?\d+)\s*\]/gi;
+            const opinionMatch = [...response.matchAll(opinionRegex)];
             
-            if (opinionMatch) {
-                opinionDelta = parseInt(opinionMatch[1], 10);
+            if (opinionMatch.length > 0) {
+                opinionDelta = parseInt(opinionMatch[0][1], 10);
                 response = response.replace(opinionRegex, "").trim();
             }
             
@@ -782,5 +780,24 @@ export class BlueManFlagHandler {
             sound: null,
             flags: { core: { canPopout: false }, [MOD_ID]: { action: "aiRequest", tokenId: tokenDoc.id, playerTokenId: playerTokenId, sceneId: tokenDoc.parent?.id || canvas.scene?.id, text: userText, socialStatus: socialStatus, isWhisper: dialogInstance.isWhisperingState, history: historyOverride, userId: game.user.id } }
         });
+    }
+
+    /**
+     * Вспомогательный метод для добавления предмета с учетом стаканья.
+     */
+    static async addItemToActor(actor, itemData) {
+        // Проверяем, есть ли такой предмет (по имени и типу)
+        const existingItem = actor.items.find(i => i.name === itemData.name && i.type === itemData.type);
+        
+        if (existingItem && existingItem.system && existingItem.system.quantity !== undefined) {
+            const currentQty = existingItem.system.quantity || 1;
+            const addQty = itemData.system?.quantity || 1;
+            return await existingItem.update({ "system.quantity": currentQty + addQty });
+        } else {
+            const data = foundry.utils.duplicate(itemData);
+            if (data._id) delete data._id;
+            const [newItem] = await actor.createEmbeddedDocuments("Item", [data]);
+            return newItem;
+        }
     }
 }

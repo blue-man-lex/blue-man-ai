@@ -2,6 +2,7 @@ import { MOD_ID } from '../../core/settings.js';
 import { BlueManFlagHandler } from '../../core/flag-handler.js';
 import { BlueManStealDialog } from './steal-dialog.js'; 
 import { BlueManMagicHandler } from './magic-handler.js'; 
+import { BlueManSystemManager } from '../adapters/system-manager.js';
 
 export class BlueManButtonHandler {
     
@@ -56,32 +57,23 @@ export class BlueManButtonHandler {
     static async handleSteal(dialog) {
         const playerActor = dialog.playerToken.actor;
         const npcActor = dialog.npcToken.actor;
+        const adapter = BlueManSystemManager.adapter;
 
-        // --- FIX: Золотая формула (которая сработала в steal-dialog) ---
-        const skillId = "sle"; // Sleight of Hand
-        const skillData = playerActor.system.skills[skillId];
-        
-        // 1. Пытаемся взять Total
-        // 2. Если нет, берем модификатор Характеристики (Ловкости), это гарантирует +45
-        let pMod = skillData?.total;
-        
-        if (pMod === undefined || pMod === null) {
-            const abilityKey = skillData?.ability || "dex";
-            pMod = playerActor.system.abilities[abilityKey]?.mod || 0;
-        }
-
-        // Делаем чистый бросок
-        const roll = new Roll("1d20 + @mod", { mod: pMod });
+        // Используем адаптер для получения бонуса Скрытности (или его аналога)
+        const pMod = adapter.getSkillValue(playerActor, "ste"); // Скрытность
+        const rollFormula = adapter.getSkillRollFormula(pMod);
+        const roll = new Roll(rollFormula);
         await roll.evaluate();
 
-        const passivePerception = npcActor.system.skills?.prc?.passive || 10;
+        // Пассивная внимательность NPC через адаптер
+        const passivePerception = adapter.getPassiveSkill(npcActor, "prc");
 
         console.log(`Blue Man AI | Steal Init Check: Mod=${pMod}, Roll=${roll.total} vs DC=${passivePerception}`);
 
         if (roll.total >= passivePerception) {
             new BlueManStealDialog(dialog.playerToken, dialog.npcToken).render(true);
         } else {
-            ui.notifications.error(`Вас заметили при попытке приблизиться! (${roll.total} < ${passivePerception})`);
+            ui.notifications.warn(`Вас заметили при попытке приблизиться! (${roll.total} < ${passivePerception})`);
             await BlueManFlagHandler.triggerAlarm(dialog.npcToken.document);
         }
     }
@@ -115,26 +107,19 @@ export class BlueManButtonHandler {
     // --- АНАЛИЗ (ИНТЕЛЛЕКТ/РАССЛЕДОВАНИЕ) ---
     static async handleAnalysis(dialog) {
         const playerActor = dialog.playerToken.actor;
+        const adapter = BlueManSystemManager.adapter;
         
         await BlueManButtonHandler._addSystemLog(dialog.npcToken.document, `🔎 Анализ существа...`);
         dialog.render(false); 
 
-        // --- FIX: Золотая формула ---
-        const skillId = "inv"; // Investigation
-        const skillData = playerActor.system.skills[skillId];
-        
-        let pMod = skillData?.total;
-        if (pMod === undefined || pMod === null) {
-            const abilityKey = skillData?.ability || "int";
-            pMod = playerActor.system.abilities[abilityKey]?.mod || 0;
-        }
-
-        const roll = new Roll("1d20 + @mod", { mod: pMod });
+        // Расследование через адаптер
+        const pMod = adapter.getSkillValue(playerActor, "inv");
+        const rollFormula = adapter.getSkillRollFormula(pMod);
+        const roll = new Roll(rollFormula);
         await roll.evaluate();
         
-        // Показываем игроку результат
         await roll.toMessage({ 
-            flavor: `🔍 <b>Анализ существа</b> (Расследование)`, 
+            flavor: `🔍 <b>Анализ существа</b> (${adapter.getSkillLabel("inv")})`, 
             speaker: ChatMessage.getSpeaker({ actor: playerActor }) 
         });
 
@@ -169,6 +154,7 @@ export class BlueManButtonHandler {
         const playerActor = dialog.playerToken.actor;
         const npcActor = dialog.npcToken.actor;
         const npcTokenDoc = dialog.npcToken.document;
+        const adapter = BlueManSystemManager.adapter;
 
         if (!playerActor || !npcActor) return ui.notifications.error("Ошибка: Актеры не найдены.");
 
@@ -201,22 +187,15 @@ export class BlueManButtonHandler {
         await BlueManButtonHandler._addSystemLog(npcTokenDoc, `${config.icon} <b>Попытка:</b> ${config.label}`);
         dialog.render(false);
 
-        // --- 1. БРОСОК ИГРОКА (Золотая формула) ---
-        const pSkillData = playerActor.system.skills[config.skill];
-        let pMod = pSkillData?.total;
-        
-        if (pMod === undefined || pMod === null) {
-            const abilityKey = pSkillData?.ability || "cha"; // Default Charisma usually
-            pMod = playerActor.system.abilities[abilityKey]?.mod || 0;
-        }
-        
-        const pRoll = new Roll("1d20 + @mod", { mod: pMod });
+        // 1. БРОСОК ИГРОКА через адаптер
+        const pMod = adapter.getSkillValue(playerActor, config.skill);
+        const pFormula = adapter.getSkillRollFormula(pMod);
+        const pRoll = new Roll(pFormula);
         await pRoll.evaluate();
         const pTotal = pRoll.total;
         
-        const d20Result = pRoll.terms[0]?.results?.[0]?.result || 10;
-        const isCritSuccess = d20Result === 20;
-        const isCritFail = d20Result === 1;
+        const isCritSuccess = adapter.isCritSuccess(pRoll);
+        const isCritFail = adapter.isCritFail(pRoll);
 
         if (!game.user.isGM) {
             await pRoll.toMessage({ 
@@ -225,31 +204,15 @@ export class BlueManButtonHandler {
             });
         }
 
-        // --- 2. БРОСОК NPC (Встречный - тоже по формуле) ---
-        let nMod = 0;
-        let nLabel = "Характеристика";
-
-        if (npcActor.system.skills && npcActor.system.skills[config.contestSkill]) {
-            const nSkillData = npcActor.system.skills[config.contestSkill];
-            nMod = nSkillData.total; // У NPC обычно total работает лучше, но перестрахуемся
-            
-            if (nMod === undefined || nMod === null) {
-                const abilityKey = nSkillData.ability || (config.contestSkill === 'dec' ? "cha" : "wis");
-                nMod = npcActor.system.abilities[abilityKey]?.mod || 0;
-            }
-            nLabel = config.contestSkill === 'dec' ? "Обман" : "Проницательность";
-        } else {
-            // Фолбэк на чистую характеристику
-            const abKey = config.contestAbility || "wis";
-            nMod = npcActor.system.abilities[abKey]?.mod || 0;
-            nLabel = abKey === "cha" ? "Харизма" : "Мудрость";
-        }
-
-        const nRoll = new Roll("1d20 + @mod", { mod: nMod });
+        // 2. БРОСОК NPC (Встречный) через адаптер
+        const nMod = adapter.getSkillValue(npcActor, config.contestSkill);
+        const nFormula = adapter.getSkillRollFormula(nMod);
+        const nRoll = new Roll(nFormula);
         await nRoll.evaluate();
         const nTotal = nRoll.total;
+        const nLabel = adapter.getSkillLabel(config.contestSkill);
 
-        // --- 3. ИТОГ ---
+        // 3. ИТОГ
         const isSuccess = pTotal >= nTotal;
         let repChange = 0;
 
@@ -262,7 +225,7 @@ export class BlueManButtonHandler {
             await BlueManFlagHandler.changeReputation(npcTokenDoc, repChange);
         }
 
-        // --- 4. КАРТОЧКА ---
+        // 4. КАРТОЧКА
         if (!game.user.isGM) {
             const resultColor = isSuccess ? "#2ecc71" : "#e74c3c"; 
             const resultText = isSuccess ? "УСПЕХ" : "ПРАВАЛ";
@@ -281,7 +244,7 @@ export class BlueManButtonHandler {
                             <i class="fas fa-gavel"></i> Социальный Поединок
                         </h3>
                         <div style="display:flex; justify-content:space-between; margin-bottom: 4px; align-items:center;">
-                            <span><i class="fas fa-dice-d20"></i> Игрок:</span>
+                            <span><i class="${adapter.id === 'cyberpunk-red-core' ? 'fas fa-dice-d10' : 'fas fa-dice-d20'}"></i> Игрок:</span>
                             <b style="font-size:1.1em;">${pTotal}</b>
                         </div>
                         <div style="text-align:right; font-size: 0.8em; color: #bdc3c7; margin-bottom: 8px;">
@@ -346,12 +309,13 @@ export class BlueManButtonHandler {
         <div class="blue-man-item-list" style="max-height: 250px; overflow-y: auto;">`;
 
         items.forEach(i => {
+            const qty = i.system.quantity || 1;
             content += `
             <label class="blue-man-item-row" style="display:flex; align-items:center; gap:8px; margin-bottom:4px; padding:4px; border-bottom:1px solid rgba(74,59,42,0.5); cursor:pointer;">
                 <input type="radio" name="itemId" value="${i.id}" style="margin:0;">
                 <img src="${i.img}" width="32" height="32" style="border:1px solid #4a3b2a; background:#000;">
                 <span style="color:#e0d0b8; font-weight:bold;">${i.name}</span>
-                <span style="color:#888; font-size:0.9em; margin-left:auto;">x${i.system.quantity || 1}</span>
+                <span style="color:#888; font-size:0.9em; margin-left:auto;">x${qty}</span>
             </label>`;
         });
         content += `</div>`;
@@ -388,22 +352,20 @@ export class BlueManButtonHandler {
         }, { classes: ["dialog", "blue-man-ai-window"] }).render(true);
     }
 
-    // --- УТИЛИТЫ ---
+    // --- УПРАВЛЕНИЕ ТОРГОВЛЕЙ ---
     static async handleUtilityAction(action, dialog) {
         if (action === "dm-give-item") return this.giveItemToPlayer(dialog);
         
-        const shopPref = game.settings.get(MOD_ID, "shopSystem") || "auto";
+        const adapter = BlueManSystemManager.adapter;
         const thmActive = !!game.THM;
         const ipActive = !!game.modules.get("item-piles")?.active;
-        const useTHM = (shopPref === "thm" && thmActive) || (shopPref === "auto" && thmActive);
-        const useIP = (shopPref === "item-piles" && ipActive) || (shopPref === "auto" && !useTHM && ipActive);
 
         if (action === "trade-open") {
-            if (useTHM) {
+            if (thmActive) {
                 const isTHMShop = dialog.npcToken.document.getFlag("treasure-hoard-manager", "data")?.type === "shop";
                 if (isTHMShop) return game.THM.uiManager.showShopInterface(dialog.npcToken.actor);
             }
-            if (useIP) {
+            if (ipActive) {
                 if (game.itempiles.API.isValidItemPile(dialog.npcToken.document)) {
                     return game.itempiles.API.renderItemPileInterface(dialog.npcToken);
                 }
@@ -414,22 +376,19 @@ export class BlueManButtonHandler {
         if (action === "dm-toggle-merchant") {
             if (!game.user.isGM) return;
             
-            if (useTHM) {
+            if (thmActive) {
                 game.THM.uiManager.showConfig(dialog.npcToken.actor);
-                ui.notifications.info("Открыты настройки Treasure Hoard Manager.");
-            } else if (useIP) {
+            } else if (ipActive) {
                 const isMerchantIP = game.itempiles.API.isValidItemPile(dialog.npcToken.document);
                 if (isMerchantIP) {
                     await game.itempiles.API.revertTokensFromItemPiles(dialog.npcToken);
-                    ui.notifications.info("NPC больше не торговец (Item Piles).");
                 } else {
                     await game.itempiles.API.turnTokensIntoItemPiles(dialog.npcToken, {
                         pileSettings: { type: "merchant", merchant: { type: "merchant" } }
                     });
-                    ui.notifications.info("NPC стал торговцем (Item Piles).");
                 }
             } else {
-                ui.notifications.warn("Модуль магазина не выбран или не активен.");
+                ui.notifications.warn("Модуль магазина не активен.");
             }
             setTimeout(() => dialog.render(false), 500);
         }
@@ -439,18 +398,13 @@ export class BlueManButtonHandler {
     static async giveItemToPlayer(dialog) {
         const npc = dialog.npcToken.actor;
         const player = dialog.playerToken.actor;
+        const adapter = BlueManSystemManager.adapter;
+        
         const items = npc.items.filter(i => 
-            ["weapon", "equipment", "consumable", "tool", "loot", "backpack"].includes(i.type)
+            ["weapon", "equipment", "consumable", "tool", "loot", "backpack", "gear", "cyberware", "program"].includes(i.type)
         );
         
-        const cur = npc.system.currency;
-        const currencyConfig = {
-            pp: { label: "Платина", max: cur.pp || 0, icon: "fas fa-gem" },
-            gp: { label: "Золото", max: cur.gp || 0, icon: "fas fa-coins" },
-            ep: { label: "Электрум", max: cur.ep || 0, icon: "fas fa-bolt" },
-            sp: { label: "Серебро", max: cur.sp || 0, icon: "fas fa-moon" },
-            cp: { label: "Медь", max: cur.cp || 0, icon: "fas fa-circle" }
-        };
+        const currencyConfig = adapter.getCurrencyConfig(npc);
 
         let htmlContent = `<form style="padding: 10px;">`;
         if (items.length > 0) {
@@ -469,7 +423,7 @@ export class BlueManButtonHandler {
             htmlContent += `<p style="color: #777;"><i>У НПС нет предметов для передачи.</i></p>`;
         }
 
-        htmlContent += `<strong style="color:#cbb497;">Валюта:</strong><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">`;
+        htmlContent += `<strong style="color:#cbb497;">Валюта:</strong><div style="display: grid; grid-template-columns: 1fr; gap: 5px;">`;
         for (const [key, data] of Object.entries(currencyConfig)) {
             htmlContent += `
             <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 3px;">
@@ -517,18 +471,18 @@ export class BlueManButtonHandler {
                         }
 
                         if (hasCurrency) {
-                            const npcNewCur = foundry.utils.deepClone(npc.system.currency);
-                            const playerNewCur = foundry.utils.deepClone(player.system.currency);
+                            const npcUpdate = adapter.updateCurrency(npc, Object.fromEntries(
+                                Object.entries(transferCurrency).map(([k, v]) => [k, -v])
+                            ));
+                            const playerUpdate = adapter.updateCurrency(player, transferCurrency);
                             
                             let curStr = [];
                             for (const [key, amount] of Object.entries(transferCurrency)) {
-                                npcNewCur[key] -= amount;
-                                playerNewCur[key] += amount;
                                 curStr.push(`${amount}${key}`);
                             }
                             
-                            await npc.update({"system.currency": npcNewCur});
-                            await player.update({"system.currency": playerNewCur});
+                            await npc.update(npcUpdate);
+                            await player.update(playerUpdate);
                             messageParts.push(`Деньги: ${curStr.join(", ")}`);
                         }
 

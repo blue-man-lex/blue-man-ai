@@ -110,7 +110,7 @@ export async function callGeminiOriginal(userInput, npcData, contextOptions = {}
 
     // --- 4. СЮЖЕТНЫЙ КОНТЕКСТ ---
     let questContext = "";
-    const tokenDoc = canvas.tokens.placeables.find(t => t.name === npcData.name && t.actor?.type === "npc")?.document;
+    const tokenDoc = canvas.tokens.placeables.find(t => t.name === npcData.name && (t.actor?.type === "npc" || t.actor?.type === "mook"))?.document;
 
     if (tokenDoc) {
         const mainArcUuid = game.settings.get(MOD_ID, "worldLoreJournal");

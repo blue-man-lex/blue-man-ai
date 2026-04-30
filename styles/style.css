@@ -261,7 +261,34 @@
   100% { transform: translate(1px, -2px) rotate(-1deg); }
 }
 
-/* --- ЧАТ (FIXED LAYOUT & FONT) --- */
+.blue-man-ai-window .side-spacer {
+    flex: 1;
+}
+
+/* --- КНОПКИ УПРАВЛЕНИЯ КВЕСТОМ (GM) --- */
+.blue-man-ai-window .gm-quest-controls {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+    margin-top: 5px !important;
+    width: 100% !important;
+}
+
+.blue-man-ai-window .gm-quest-controls button {
+    flex: 1 !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 2px !important;
+    height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.9em !important;
+}
+
+/* Кнопки квеста теперь наследуют системный стиль (медный в DnD, неоновый в CPR) */
+
+
 .blue-man-ai-window .blue-man-chat-container {
     flex: 1; 
     display: flex;

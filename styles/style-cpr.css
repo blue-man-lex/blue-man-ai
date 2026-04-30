@@ -1,0 +1,654 @@
+/**
+ * Blue Man AI - Cyberpunk Red Theme (V14 - PIXEL TERMINAL)
+ * Пиксельный шрифт VT323 для аутентичного стиля старого ПК.
+ * Высокая специфичность селекторов для полного подавления стандартных стилей Foundry.
+ */
+
+/* Подключение пиксельного шрифта старого терминала */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+/* ==========================================
+   АНИМАЦИИ
+   ========================================== */
+@keyframes cyb-blink {
+
+    0%,
+    49% {
+        opacity: 1;
+    }
+
+    50%,
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes cyb-scanline {
+    0% {
+        left: -50%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+/* ==========================================
+   СКРЫТИЕ ФЭНТЕЗИ-ЭЛЕМЕНТОВ
+   ========================================== */
+.blue-man-ai-window .magic-btn,
+.blue-man-ai-window #dm-whisper,
+.blue-man-ai-window #player-quest-log,
+.blue-man-ai-window #player-quest-hint {
+    display: none !important;
+}
+
+/* ==========================================
+   1. ОКНО — ПОЛНОЕ ПЕРЕКРЫТИЕ FOUNDRY
+   Используем максимальную специфичность
+   ========================================== */
+
+.app.window-app.blue-man-ai-window {
+    background: #050505 !important;
+    background-image: none !important;
+    border: 1px solid #ff003c !important;
+    border-radius: 0 !important;
+    box-shadow: 0 0 30px rgba(255, 0, 60, 0.15), inset 0 0 20px rgba(255, 0, 60, 0.05) !important;
+}
+
+/* 1a. ШАПКА ОКНА */
+.app.window-app.blue-man-ai-window .window-header {
+    background: #0a0a0c !important;
+    background-image: none !important;
+    border-bottom: 2px solid #ff003c !important;
+    color: #ff003c !important;
+    font-family: "VT323", "Courier New", monospace !important;
+    font-size: 18px !important;
+    text-shadow: 0 0 5px rgba(255, 0, 60, 0.5) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 3px !important;
+}
+
+.app.window-app.blue-man-ai-window .window-header .window-title {
+    color: #ff003c !important;
+}
+
+.app.window-app.blue-man-ai-window .window-header .window-title::before {
+    content: 'SYS>';
+    color: #fff;
+    font-size: 0.8em;
+    margin-right: 8px;
+    animation: cyb-blink 1s infinite;
+}
+
+/* Кнопка закрытия и все ссылки в шапке */
+.app.window-app.blue-man-ai-window .window-header a,
+.app.window-app.blue-man-ai-window .window-header .close,
+.app.window-app.blue-man-ai-window .window-header .header-button {
+    color: #ff003c !important;
+    background: none !important;
+    background-image: none !important;
+}
+
+/* 1b. УГОЛОК РЕСАЙЗА */
+.app.window-app.blue-man-ai-window .window-resizable-handle {
+    background: none !important;
+    background-image: none !important;
+    border: none !important;
+    opacity: 0.5;
+}
+
+.app.window-app.blue-man-ai-window .window-resizable-handle::after {
+    content: '//';
+    color: #ff003c;
+    font-family: monospace;
+    font-size: 10px;
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+}
+
+/* 1c. КОНТЕНТ ОКНА */
+.app.window-app.blue-man-ai-window .window-content {
+    background-color: #050505 !important;
+    background-image:
+        linear-gradient(rgba(255, 0, 60, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 60, 0.03) 1px, transparent 1px) !important;
+    background-size: 20px 20px !important;
+    color: #ffffff !important;
+    padding: 0 !important;
+    font-family: "VT323", "Courier New", monospace !important;
+    text-transform: uppercase;
+    overflow: hidden !important;
+}
+
+/* ==========================================
+   2. БОКОВЫЕ ПАНЕЛИ
+   ========================================== */
+
+.blue-man-ai-window .blue-man-side-column {
+    width: 280px !important;
+    background: rgba(5, 5, 5, 0.95) !important;
+    border-right: 1px solid #5a0015 !important;
+    border-radius: 0 !important;
+    padding: 20px !important;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-sizing: border-box !important;
+    box-shadow: inset 0 0 20px rgba(255, 0, 60, 0.05);
+    overflow: hidden !important;
+}
+
+.blue-man-ai-window .npc-side {
+    border-right: none !important;
+    border-left: 1px solid #5a0015 !important;
+}
+
+/* Декоративные уголки (как в THM blackmarket) */
+.blue-man-ai-window .blue-man-side-column::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 15px;
+    height: 15px;
+    border-top: 2px solid #ff003c;
+    border-left: 2px solid #ff003c;
+    pointer-events: none;
+}
+
+.blue-man-ai-window .blue-man-side-column::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 15px;
+    height: 15px;
+    border-bottom: 2px solid #ff003c;
+    border-right: 2px solid #ff003c;
+    pointer-events: none;
+}
+
+/* ==========================================
+   3. ПОРТРЕТЫ (БОЛЬШИЕ, КАК В THM)
+   ========================================== */
+
+.blue-man-ai-window .side-portrait {
+    width: calc(100% + 40px) !important;
+    /* Растягиваем на всю ширину колонки (с учетом padding 20px) */
+    margin-left: -20px !important;
+    margin-right: -20px !important;
+    height: 250px !important;
+    /* Подожали рамку на 20% (по 10% сверху и снизу) */
+    border: none !important;
+    border-bottom: 2px solid #ff003c !important;
+    /* Только нижняя граница */
+    border-top: 2px solid #ff003c !important;
+    /* И верхняя */
+    border-radius: 0 !important;
+    background: #000 !important;
+    box-shadow: 0 0 15px rgba(255, 0, 60, 0.2);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+/* Сканер биометрии поверх портрета (как в THM thm-portrait-frame) */
+.blue-man-ai-window .side-portrait::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(255, 0, 60, 0.15) 1px, transparent 1px);
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.blue-man-ai-window .side-portrait img {
+    width: calc(100% - 3px) !important;
+    /* Ужи на 3 пикселя */
+    height: 100% !important;
+    object-fit: contain !important;
+    position: absolute;
+    top: 0;
+    left: 1.5px !important;
+    /* Центрируем */
+    filter: contrast(1.2) grayscale(0.5) !important;
+    z-index: 1;
+}
+
+/* ==========================================
+   4. ИМЕНА И ID
+   ========================================== */
+
+.blue-man-ai-window .side-name {
+    font-family: "VT323", "Courier New", monospace !important;
+    font-size: 18px !important;
+    color: #fff !important;
+    font-weight: normal !important;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px rgba(255, 0, 60, 0.5);
+    text-align: center;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    /* Для абсолютного позиционирования индикаторов */
+    flex-shrink: 0;
+}
+
+/* Мигающий ID убран по просьбе пользователя */
+
+
+/* NPC сторона: имя + иконки В ОДНУ ЛИНИЮ */
+.blue-man-ai-window .npc-side .side-name {
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    /* Центрируем контент */
+    width: 100%;
+}
+
+/* Маркер TGT убран по просьбе пользователя */
+
+
+/* Текст имени в центре */
+.blue-man-ai-window .npc-side .side-name span {
+    flex: 1;
+    text-align: center;
+}
+
+/* Ховер для шестеренки и глаза */
+.blue-man-ai-window .npc-side .side-name #dm-settings:hover,
+.blue-man-ai-window .npc-side .side-name #dm-toggle-name:hover {
+    color: #fff !important;
+    text-shadow: 0 0 15px #ff003c;
+    transform: scale(1.3);
+}
+
+/* ==========================================
+   5. ИКОНКИ ДЕЙСТВИЙ (Воровство)
+   ========================================== */
+
+/* Общий стиль для всех action-icon */
+.blue-man-ai-window .action-icon {
+    color: #ff003c !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 16px !important;
+}
+
+.blue-man-ai-window .action-icon:hover {
+    color: #fff !important;
+    text-shadow: 0 0 10px #ff003c;
+    transform: scale(1.2);
+}
+
+/* Кнопка кражи — отдельный ряд, крупная */
+.blue-man-ai-window .side-actions-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 10px 0;
+    flex-shrink: 0;
+}
+
+.blue-man-ai-window #player-steal {
+    font-size: 28px !important;
+    color: #ff003c !important;
+    filter: drop-shadow(0 0 8px rgba(255, 0, 60, 0.6));
+}
+
+/* Шестеренка и глаз в правой панели */
+.blue-man-ai-window #dm-settings {
+    color: #ff003c !important;
+    margin-right: 5px !important;
+}
+
+.blue-man-ai-window #dm-toggle-name {
+    color: #ff003c !important;
+    margin-left: 5px !important;
+}
+
+/* ==========================================
+   6. РЕПУТАЦИЯ
+   ========================================== */
+
+.blue-man-ai-window .reputation-widget {
+    padding: 8px !important;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.blue-man-ai-window .reputation-bar {
+    background: #0a0a0c !important;
+    border: 1px solid #5a0015 !important;
+    height: 10px !important;
+    border-radius: 0 !important;
+}
+
+.blue-man-ai-window .reputation-marker {
+    background: #ff003c !important;
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.6) !important;
+    border-radius: 0 !important;
+}
+
+.blue-man-ai-window .reputation-text {
+    font-family: "VT323", "Courier New", monospace !important;
+    font-size: 12px !important;
+    letter-spacing: 2px;
+}
+
+/* ==========================================
+   7. ЧАТ — ЗЕЛЕНЫЙ ТЕРМИНАЛЬНЫЙ ЛОГ
+   ========================================== */
+
+.blue-man-ai-window .blue-man-chat-container {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.9) !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+    position: relative;
+}
+
+/* Горизонтальная сканирующая линия (как в THM exclusive-column::after) */
+.blue-man-ai-window .blue-man-chat-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 50%;
+    height: 2px;
+    background: #ff003c;
+    box-shadow: 0 0 10px #ff003c;
+    animation: cyb-scanline 3s linear infinite;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.blue-man-ai-window #message-log {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    background-image: radial-gradient(circle at center, rgba(0, 255, 65, 0.03) 0%, transparent 80%);
+}
+
+/* Сообщения */
+.blue-man-ai-window .chat-message {
+    background: rgba(10, 10, 12, 0.95) !important;
+    border: 1px solid #5a0015 !important;
+    color: #00ff41 !important;
+    font-family: "VT323", "Courier New", monospace !important;
+    font-size: 16px !important;
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.3);
+    padding: 12px 15px !important;
+    margin-bottom: 15px;
+    border-radius: 0 !important;
+    position: relative;
+}
+
+.blue-man-ai-window .chat-message div,
+.blue-man-ai-window .chat-message span,
+.blue-man-ai-window .chat-message p {
+    color: #00ff41 !important;
+}
+
+/* Имя отправителя */
+.blue-man-ai-window .chat-message small {
+    color: #ff003c !important;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border-bottom: 1px dashed #5a0015;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    display: block;
+    font-size: 0.85em;
+}
+
+/* Цветовая индикация сторон (как в THM trade: player-from / player-to) */
+.blue-man-ai-window .npc-msg {
+    border-left: 3px solid #ff003c !important;
+    background: linear-gradient(90deg, rgba(255, 0, 60, 0.05) 0%, transparent 100%) !important;
+}
+
+.blue-man-ai-window .player-msg {
+    border-left: 3px solid #00e5ff !important;
+    background: linear-gradient(90deg, rgba(0, 229, 255, 0.05) 0%, transparent 100%) !important;
+}
+
+/* Скроллбар чата (как в THM) */
+.blue-man-ai-window #message-log::-webkit-scrollbar {
+    width: 6px;
+}
+
+.blue-man-ai-window #message-log::-webkit-scrollbar-track {
+    background: #050505;
+    border-left: 1px solid #5a0015;
+}
+
+.blue-man-ai-window #message-log::-webkit-scrollbar-thumb {
+    background: #5a0015;
+    border-radius: 0;
+}
+
+.blue-man-ai-window #message-log::-webkit-scrollbar-thumb:hover {
+    background: #ff003c;
+}
+
+/* ==========================================
+   8. ВВОД И КНОПКА EXEC_
+   ========================================== */
+
+.blue-man-ai-window .blue-man-input-bar {
+    background: #0a0a0c !important;
+    border-top: 2px solid #ff003c !important;
+    padding: 15px 20px !important;
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.blue-man-ai-window .blue-man-input-bar input {
+    flex: 1;
+    background: #000 !important;
+    background-image: none !important;
+    border: 1px solid #5a0015 !important;
+    border-radius: 0 !important;
+    color: #00ff41 !important;
+    font-family: "VT323", "Courier New", monospace !important;
+    font-weight: bold;
+    font-size: 14px !important;
+    height: 40px !important;
+    padding: 4px 12px !important;
+    transition: all 0.2s ease;
+}
+
+.blue-man-ai-window .blue-man-input-bar input:focus {
+    border-color: #ff003c !important;
+    outline: none !important;
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.4), inset 0 0 5px rgba(255, 0, 60, 0.2) !important;
+}
+
+/* Кнопка EXEC_ — МАКСИМАЛЬНОЕ ПЕРЕКРЫТИЕ */
+.app.window-app.blue-man-ai-window .blue-man-input-bar div#dm-send.bmai-exec-btn,
+.blue-man-ai-window #dm-send,
+#dm-send.bmai-exec-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100px !important;
+    height: 42px !important;
+    background-color: #050505 !important;
+    background: #050505 !important;
+    background-image: none !important;
+    border: 1px solid #ff003c !important;
+    color: #ffffff !important;
+    font-family: "VT323", "Courier New", monospace !important;
+    font-size: 20px !important;
+    letter-spacing: 2px !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: inset 0 0 15px rgba(255, 0, 60, 0.2) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    user-select: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.app.window-app.blue-man-ai-window .blue-man-input-bar div#dm-send.bmai-exec-btn:hover {
+    background-color: #ff003c !important;
+    background: #ff003c !important;
+    color: #000 !important;
+    border-color: #ff003c !important;
+    box-shadow: 0 0 20px rgba(255, 0, 60, 0.6) !important;
+}
+
+/* ==========================================
+   9. ВСЕ КНОПКИ (КАК В THM .thm-btn и .sheet-footer button)
+   ========================================== */
+
+.blue-man-ai-window button {
+    background: transparent !important;
+    background-image: none !important;
+    border: 1px solid #ff003c !important;
+    color: #ff003c !important;
+    border-radius: 0 !important;
+    font-family: "VT323", "Courier New", monospace !important;
+    font-weight: normal !important;
+    font-size: 16px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: inset 0 0 10px rgba(255, 0, 60, 0.1) !important;
+}
+
+.blue-man-ai-window button i {
+    color: #ff003c !important;
+}
+
+.blue-man-ai-window button:hover {
+    background: #ff003c !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(255, 0, 60, 0.5) !important;
+}
+
+.blue-man-ai-window button:hover i {
+    color: #000 !important;
+}
+
+/* Кнопка атаки — особая красная подсветка */
+.blue-man-ai-window #dm-attack {
+    border-color: #ff003c !important;
+    color: #ff003c !important;
+    text-shadow: 0 0 5px rgba(255, 0, 60, 0.5);
+}
+
+/* Кнопки социальных проверок — сетка 2x2 */
+.blue-man-ai-window .social-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 15px;
+    flex-shrink: 0;
+}
+
+.blue-man-ai-window .social-grid button {
+    padding: 10px 5px !important;
+    font-size: 18px !important;
+}
+
+/* Контейнер действий ГМ */
+.blue-man-ai-window .gm-actions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 15px;
+}
+
+.blue-man-ai-window .gm-actions-container button {
+    width: 100%;
+    padding: 10px !important;
+}
+
+/* Секрет */
+.blue-man-ai-window .secret-indicator {
+    font-family: "Rajdhani", "Courier New", monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    border-radius: 0;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.blue-man-ai-window .secret-indicator.has-secret {
+    color: #00ff41;
+    border: 1px dashed #00ff41;
+    background: rgba(0, 255, 65, 0.05);
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+}
+
+.blue-man-ai-window .secret-indicator.no-secret {
+    color: #666;
+    border: 1px dashed #333;
+}
+
+.blue-man-ai-window .secret-content-box {
+    background: rgba(0, 255, 65, 0.05) !important;
+    border: 1px solid rgba(0, 255, 65, 0.2) !important;
+    border-left: 3px solid #00ff41 !important;
+    color: #00ff41 !important;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    text-transform: none;
+}
+
+/* Бейджи зрителей */
+.blue-man-ai-window .active-viewers-bar {
+    background: rgba(10, 10, 12, 0.9);
+    border-bottom: 1px dashed #5a0015;
+    padding: 5px 10px;
+}
+
+.blue-man-ai-window .viewer-badge {
+    border-radius: 0 !important;
+}
+
+#dm-settings {
+    margin-right: 5px !important;
+    color: #e67e22 !important;
+}
+
+#dm-toggle-name {
+    margin-left: 5px !important;
+}
+
+.blue-man-ai-window .gm-quest-controls {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.blue-man-ai-window .gm-quest-controls button {
+    flex: 1 !important;
+}
+
+#dm-toggle-merchant.is-merchant {
+    background-color: #7f8c8d !important;
+    border-color: #bdc3c7 !important;
+}
+
+.blue-man-ai-window .side-spacer {
+    flex: 1;
+}

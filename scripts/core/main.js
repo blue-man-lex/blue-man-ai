@@ -12,10 +12,25 @@ import { BlueManMarkers } from '../systems/ui/markers.js';
 import { BlueManQuestLog } from '../systems/quest-system/quest-log.js'; 
 import { BlueManRewardDialog } from '../systems/quest-system/reward-dialog.js';
 import { NoticeBoardConfig, NoticeBoardApp } from '../systems/quest-system/notice-board.js';
+import { BlueManSystemManager } from '../systems/adapters/system-manager.js';
 
 Hooks.once('init', () => {
     applyCompatibilityFixes();
     registerSettings();
+    BlueManSystemManager.init();
+
+    // --- ДОБАВЛЕНО: ЗАГРУЗКА ТЕМЫ ---
+    const theme = game.settings.get(MOD_ID, "theme");
+    const systemId = game.system.id;
+    
+    if (theme === "cpr" || (theme === "auto" && systemId === "cyberpunk-red-core")) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.type = "text/css";
+        link.href = `modules/${MOD_ID}/styles/style-cpr.css`;
+        document.head.appendChild(link);
+        console.log("Blue Man AI | Загружена тема: Cyberpunk Red");
+    }
     
     game.keybindings.register(MOD_ID, "interactNpc", {
         name: "Поговорить с NPC / Открыть Доску",
@@ -26,7 +41,7 @@ Hooks.once('init', () => {
         precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
     });
     
-    console.log("Blue Man AI | Init complete. v0.5.15 (Cache disabled - Rate limit fixed).");
+    console.log(`Blue Man AI | Init complete. v0.13.16 (${game.blueManAI.adapter.id} adapter ready).`);
 });
 
 Hooks.on("updateSetting", (setting, change, options, userId) => {
@@ -315,14 +330,11 @@ Hooks.once('ready', () => {
                 const playerActor = playerTokenDoc?.actor;
 
                 if (playerActor) {
-                    const pLangs = new Set(playerActor.system.traits?.languages?.value || []);
-                    const nLangs = new Set(npcTokenDoc.actor.system.traits?.languages?.value || []);
+                    const adapter = BlueManSystemManager.adapter;
+                    const pLangs = new Set(adapter.getLanguages(playerActor));
+                    const nLangs = new Set(adapter.getLanguages(npcTokenDoc.actor));
                     let shared = [...pLangs].filter(x => nLangs.has(x));
-                    if (shared.length === 0) {
-                        const pC = (playerActor.system.traits?.languages?.custom || "").toLowerCase();
-                        const nC = (npcTokenDoc.actor.system.traits?.languages?.custom || "").toLowerCase();
-                        if (pC && nC && (pC.includes(nC) || nC.includes(pC))) shared.push("Custom");
-                    }
+                    
                     if (shared.length > 0) {
                         languageInfo.hasShared = true;
                         languageInfo.sharedLang = shared[0];
@@ -342,11 +354,11 @@ Hooks.once('ready', () => {
                 }, history);
 
                 let opinionDelta = 0;
-                const opinionRegex = /\[OPINION:\s*([+-]?\d+)\]/i;
-                const opinionMatch = response.match(opinionRegex);
+                const opinionRegex = /\[OPINION:?\s*([+-]?\d+)\s*\]/gi;
+                const opinionMatch = [...response.matchAll(opinionRegex)];
                 
-                if (opinionMatch) {
-                    opinionDelta = parseInt(opinionMatch[1], 10);
+                if (opinionMatch.length > 0) {
+                    opinionDelta = parseInt(opinionMatch[0][1], 10);
                     response = response.replace(opinionRegex, "").trim();
                 }
 
@@ -375,11 +387,26 @@ Hooks.once('ready', () => {
     });
 });
 
+/**
+ * Безопасный вызов уведомлений, чтобы избежать ошибок в консоли
+ */
+function safeNotify(type, message) {
+    if (ui.notifications && ui.notifications.active) {
+        ui.notifications[type](message);
+    } else {
+        console.log(`Blue Man AI | ${type.toUpperCase()}: ${message}`);
+        // Пробуем еще раз через небольшую паузу
+        setTimeout(() => {
+            if (ui.notifications && ui.notifications.active) ui.notifications[type](message);
+        }, 500);
+    }
+}
+
 function attemptInteractionSmart() {
     // 1. ПРОВЕРКА ПОД КУРСОРОМ (Canvas)
     const mousePos = canvas.mousePosition;
     
-    // Ищем тайл под курсором
+    // Ищем тайл под курсором (Доска объявлений)
     const hoveredTile = canvas.tiles.placeables.find(t => t.bounds.contains(mousePos.x, mousePos.y));
     if (hoveredTile) {
         const flags = hoveredTile.document.getFlag(MOD_ID, 'board');
@@ -394,19 +421,32 @@ function attemptInteractionSmart() {
     let potentialNpc = null;
     
     // Ищем игрока
-    if (canvas.tokens.controlled.length > 0) potentialPlayer = canvas.tokens.controlled[0];
-    else if (game.user.character) potentialPlayer = canvas.tokens.placeables.find(t => t.actor?.id === game.user.character.id);
+    if (canvas.tokens.controlled.length > 0) {
+        potentialPlayer = canvas.tokens.controlled.find(t => t.actor?.hasPlayerOwner) || canvas.tokens.controlled[0];
+    } else if (game.user.character) {
+        potentialPlayer = canvas.tokens.placeables.find(t => t.actor?.id === game.user.character.id);
+    }
     
-    // Ищем NPC под курсором (только живые существа)
+    // Ищем NPC под курсором
     if (canvas.tokens.hover) {
-        const type = canvas.tokens.hover.actor?.type;
-        if (type === "npc" || type === "character") {
-            potentialNpc = canvas.tokens.hover;
+        const actor = canvas.tokens.hover.actor;
+        if (actor) {
+            const isPc = actor.hasPlayerOwner;
+            // ГМ может говорить со всеми, игрок только с NPC
+            if (game.user.isGM || !isPc) {
+                potentialNpc = canvas.tokens.hover;
+            }
         }
     }
     
-    if (!potentialPlayer) return ui.notifications.warn("Не найден ваш персонаж на сцене.");
-    if (!potentialNpc) return ui.notifications.warn("Выберите NPC для разговора или наведите на доску.");
+    if (!potentialPlayer) {
+        safeNotify("warn", "Не найден ваш персонаж на сцене.");
+        return;
+    }
+    if (!potentialNpc) {
+        safeNotify("warn", "Выберите NPC для разговора или наведите на доску.");
+        return;
+    }
     
     new BlueManDialog(potentialNpc, potentialPlayer).render(true);
 }
@@ -426,6 +466,11 @@ function initiateChatFromHUD(npcToken) {
         return ui.notifications.warn("Выберите своего персонажа!");
     }
 
+    // Защита от общения с игроками
+    if (!game.user.isGM && npcToken.actor?.hasPlayerOwner) {
+        return ui.notifications.warn("Вы не можете использовать ИИ для разговора с другими игроками.");
+    }
+
     new BlueManDialog(npcToken, playerToken).render(true);
 }
 
@@ -441,7 +486,7 @@ Hooks.on('renderTokenHUD', (app, html, data) => {
         return;
     }
 
-    if (token.actor.type === "npc") {
+    if (token.actor.type === "npc" || token.actor.type === "mook") {
         if ($colLeft.find('.blue-man-chat-btn').length) return; 
 
         const chatBtn = $(`

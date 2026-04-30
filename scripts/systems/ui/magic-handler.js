@@ -1,4 +1,5 @@
 import { BlueManFlagHandler } from '../../core/flag-handler.js';
+import { BlueManSystemManager } from '../adapters/system-manager.js';
 
 export class BlueManMagicHandler {
     
@@ -45,16 +46,15 @@ export class BlueManMagicHandler {
             // --- 3. ТОЧЕЧНЫЙ ПОИСК ---
             
             // А. Проверяем Название Самого Предмета
-            // (Это найдет "Заклинание: Дружба" или "Свиток Очарования")
             if (whitelist.some(w => i.name.toLowerCase().includes(w))) return true;
 
             // Б. Проверяем Активности (Activities/Functions) - ТОЛЬКО для предметов
-            // Это найдет "Паралич чудовища" ВНУТРИ "Посоха могущества"
-            // Мы НЕ смотрим описание (Description), чтобы не цеплять мусор.
             if ((i.type === "weapon" || i.type === "equipment") && i.system.activities) {
-                for (const activity of i.system.activities.values()) {
+                // В dnd5e 4.0+ activities - это Map или объект с итератором
+                const activities = i.system.activities.values?.() || Object.values(i.system.activities);
+                for (const activity of activities) {
                     if (activity.name && whitelist.some(w => activity.name.toLowerCase().includes(w))) {
-                        return true; // Нашли активность внутри предмета!
+                        return true; 
                     }
                 }
             }
@@ -66,6 +66,7 @@ export class BlueManMagicHandler {
     static openMagicDialog(dialogInstance) {
         const actor = dialogInstance.playerToken.actor;
         const spells = this.getSocialSpells(actor);
+        const adapter = BlueManSystemManager.adapter;
         
         if (spells.length === 0) {
             return ui.notifications.warn("У вас нет подходящих заклинаний или магических предметов.");
@@ -74,7 +75,7 @@ export class BlueManMagicHandler {
         let content = `<div class="blue-man-item-list" style="max-height: 400px; overflow-y: auto;">`;
         spells.forEach(s => {
             let typeLabel = "Способность";
-            if (s.type === 'spell') typeLabel = CONFIG.DND5E.spellSchools[s.system.school] || "Заклинание";
+            if (s.type === 'spell') typeLabel = adapter.getSpellSchoolLabel(s);
             else if (s.type === 'consumable') typeLabel = "Предмет";
             else if (s.type === 'weapon' || s.type === 'equipment') typeLabel = "Маг. Артефакт";
 

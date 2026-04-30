@@ -1,30 +1,33 @@
 <div class="blue-man-main-layout">
-    
+
     <!-- ЛЕВАЯ КОЛОНКА: ИГРОК -->
     <aside class="blue-man-side-column player-side">
         <div class="side-portrait">
             <img src="{{playerImg}}" title="{{playerName}}">
         </div>
-        
+
         <div class="side-name">
-            <i id="dm-whisper" class="fas fa-ear-listen action-icon {{#if isWhispering}}whisper-active{{/if}}" title="Шепот (ВКЛ/ВЫКЛ)"></i>
+            <i id="dm-whisper" class="fas fa-ear-listen action-icon {{#if isWhispering}}whisper-active{{/if}}"
+                title="Шепот (ВКЛ/ВЫКЛ)"></i>
             <span style="flex:1; text-align:center;">{{playerName}}</span>
             <!-- [NEW] КНОПКА ЖУРНАЛА ЗАДАНИЙ -->
-            <i id="player-quest-log" class="fas fa-scroll action-icon" title="Журнал Заданий Группы" style="color: #f1c40f;"></i>
+            <i id="player-quest-log" class="fas fa-scroll action-icon" title="Журнал Заданий Группы"
+                style="color: #f1c40f;"></i>
         </div>
-        
+
         <div class="side-actions-row">
             <i id="player-magic" class="fas fa-crystal-ball action-icon magic-btn" title="Социальная Магия"></i>
             <i id="player-steal" class="fas fa-mask action-icon" title="Ограбить (Попытка)"></i>
         </div>
-        
+
         {{#if isSecretRevealed}}
-            <div class="secret-indicator has-secret">
-                <i class="fas fa-unlock"></i> СЕКРЕТ РАСКРЫТ
-            </div>
-            <div class="secret-content-box" style="border-left: 3px solid #f1c40f; background: rgba(241, 196, 15, 0.1); color: #e0d0b8;">
-                {{npcSecret}}
-            </div>
+        <div class="secret-indicator has-secret">
+            <i class="fas fa-unlock"></i> СЕКРЕТ РАСКРЫТ
+        </div>
+        <div class="secret-content-box"
+            style="border-left: 3px solid #f1c40f; background: rgba(241, 196, 15, 0.1); color: #e0d0b8;">
+            {{npcSecret}}
+        </div>
         {{/if}}
 
         <div style="flex: 1;"></div>
@@ -37,7 +40,8 @@
 
         {{#if isMerchant}}
         <div style="width: 100%; margin-bottom: 5px;">
-            <button data-action="trade-open" style="width: 100%; background: linear-gradient(180deg, #d35400 0%, #a04000 100%); color: white; border: 1px solid #a04000;">
+            <button data-action="trade-open"
+                style="width: 100%; background: linear-gradient(180deg, #d35400 0%, #a04000 100%); color: white; border: 1px solid #a04000;">
                 <i class="fas fa-coins"></i> Торговля
             </button>
         </div>
@@ -55,7 +59,7 @@
     <main class="blue-man-chat-container">
         <div class="active-viewers-bar">
             {{#each activeViewers}}
-            <div class="viewer-badge" title="{{this.name}}" style="border-color: {{this.color}};">
+            <div class="viewer-badge" title="{{this.name}}" data-border-color="{{this.color}}">
                 <img src="{{this.img}}">
             </div>
             {{/each}}
@@ -63,20 +67,20 @@
 
         <div id="message-log">
             {{#each history}}
-                <div class="chat-message {{#if (eq this.speaker ../npcName)}}npc-msg{{else}}player-msg{{/if}} {{#if this.isWhisper}}whisper{{/if}}"
-                     style="{{#if (ne this.speaker ../npcName)}}border-left-color: {{this.userColor}};{{/if}}">
-                    
-                    {{#if (ne this.speaker ../npcName)}}
-                        <small style="color: {{this.userColor}};">{{this.speaker}}</small>
-                    {{/if}}
-                    <div>{{{this.text}}}</div>
-                </div>
+            <div class="chat-message {{#if (eq this.speaker ../npcName)}}npc-msg{{else}}player-msg{{/if}} {{#if this.isWhisper}}whisper{{/if}}"
+                data-border-color="{{this.userColor}}">
+
+                {{#if (ne this.speaker ../npcName)}}
+                <small data-text-color="{{this.userColor}}">{{this.speaker}}</small>
+                {{/if}}
+                <div>{{{this.text}}}</div>
+            </div>
             {{/each}}
         </div>
 
         <div class="blue-man-input-bar">
             <input type="text" id="ai-input" placeholder="Напишите сообщение..." autocomplete="off">
-            <button id="dm-send" title="Отправить"><i class="fas fa-paper-plane"></i></button>
+            <div id="dm-send" class="bmai-exec-btn" title="Отправить">EXEC_</div>
         </div>
     </main>
 
@@ -86,72 +90,79 @@
             <img src="{{npcImg}}" title="{{npcName}}">
         </div>
 
-        <div class="reputation-widget" title="Репутация: {{reputationValue}}/100">
-            <div class="reputation-bar">
-                <div class="reputation-marker" style="left: {{reputationValue}}%;"></div>
-            </div>
-            <div class="reputation-text" style="color: {{reputationColor}}">{{reputationLabel}}</div>
+        <div class="side-name">
+            <span style="flex:1; text-align:center;">{{#if isGM}}{{npcName}}{{else}}{{displayName}}{{/if}}</span>
         </div>
 
-        <div class="side-name">
+        <div class="reputation-widget" title="Репутация: {{reputationValue}}/100">
+            <div class="reputation-bar">
+                <div class="reputation-marker" data-left-pct="{{reputationValue}}"></div>
+            </div>
+            <div class="reputation-text" data-text-color="{{reputationColor}}">{{reputationLabel}}</div>
+        </div>
+
+        <div class="side-actions-row">
             {{#if isGM}}
-                <i id="dm-settings" class="fas fa-cog action-icon" title="Настройки Квеста и Арки" style="margin-right: 5px; color: #e67e22;"></i>
-                {{npcName}}
-                <i id="dm-toggle-name" class="fas {{#if isNameRevealed}}fa-eye active{{else}}fa-eye-slash{{/if}} action-icon" title="Показать/Скрыть имя" style="margin-left: 5px;"></i>
+            <i id="dm-settings" class="fas fa-cog action-icon" title="Настройки Квеста и Арки"></i>
+            <i id="dm-toggle-name"
+                class="fas {{#if isNameRevealed}}fa-eye active{{else}}fa-eye-slash{{/if}} action-icon"
+                title="Показать/Скрыть имя"></i>
             {{else}}
-                {{displayName}}
-                <!-- [NEW] КНОПКА ЧИТЕРА (ПОДСКАЗКА) -->
-                {{#if showQuestHint}}
-                    <i id="player-quest-hint" class="fas fa-book action-icon" title="Читать Источник Квеста (OOC)" style="margin-left: 5px; color: #95a5a6;"></i>
-                {{/if}}
+            <!-- [NEW] КНОПКА ЧИТЕРА (ПОДСКАЗКА) -->
+            {{#if showQuestHint}}
+            <i id="player-quest-hint" class="fas fa-book action-icon" title="Читать Источник Квеста (OOC)"
+                style="color: #95a5a6;"></i>
+            {{/if}}
             {{/if}}
         </div>
 
         {{#if isGM}}
-            {{#if hasSecret}}
-                <div class="secret-indicator has-secret">
-                    <i class="fas fa-check-circle"></i> Секрет найден
-                </div>
-                <div class="secret-content-box">
-                    {{npcSecret}}
-                </div>
-            {{else}}
-                <div class="secret-indicator no-secret">
-                    <i class="fas fa-times-circle"></i> Секрета нет
-                </div>
+        {{#if hasSecret}}
+        <div class="secret-indicator has-secret">
+            <i class="fas fa-check-circle"></i> Секрет найден
+        </div>
+        <div class="secret-content-box">
+            {{npcSecret}}
+        </div>
+        {{else}}
+        <div class="secret-indicator no-secret">
+            <i class="fas fa-times-circle"></i> Секрета нет
+        </div>
+        {{/if}}
+
+        <div class="gm-actions-container">
+            <button id="dm-give-item" title="Дать предмет"><i class="fas fa-hand-holding"></i> Передать</button>
+
+            {{#if isItemPilesActive}}
+            <button id="dm-toggle-merchant" class="{{#if isMerchant}}is-merchant{{/if}}">
+                <i class="fas fa-balance-scale"></i> {{#if isMerchant}}Снять статус{{else}}Назначить торговцем{{/if}}
+            </button>
             {{/if}}
 
-            <div class="gm-actions-container">
-                <button id="dm-give-item" title="Дать предмет"><i class="fas fa-hand-holding"></i> Передать</button>
-                
-                {{#if isItemPilesActive}}
-                    <button id="dm-toggle-merchant" style="background: {{#if isMerchant}}linear-gradient(180deg, #95a5a6 0%, #7f8c8d 100%){{else}}linear-gradient(180deg, #e67e22 0%, #d35400 100%){{/if}};">
-                        <i class="fas fa-balance-scale"></i> {{#if isMerchant}}Снять статус{{else}}Назначить торговцем{{/if}}
-                    </button>
-                {{/if}}
-
-                <!-- [NEW] БЛОК УПРАВЛЕНИЯ КВЕСТОМ -->
-                {{#if hasActiveQuest}}
-                    <div style="display: flex; gap: 5px; margin-top: 5px;">
-                        <button id="dm-quest-offer" title="Предложить Квест Игрокам" style="flex: 1; background: linear-gradient(180deg, #2980b9 0%, #2471a3 100%); border-color: #5dade2;">
-                            <i class="fas fa-exclamation"></i>
-                        </button>
-                        <button id="dm-quest-success" title="Квест: УСПЕХ (+10 Реп)" style="flex: 1; background: linear-gradient(180deg, #27ae60 0%, #1e8449 100%); border-color: #2ecc71;">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button id="dm-quest-fail" title="Квест: ПРОВАЛ (-10 Реп)" style="flex: 1; background: linear-gradient(180deg, #c0392b 0%, #922b21 100%); border-color: #e74c3c;">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                {{/if}}
-                <!-- ------------------------ -->
-
-                <button id="dm-attack" class="attack-btn" title="Начать бой!"><i class="fas fa-swords"></i> АТАКОВАТЬ</button>
-                
-                <button id="dm-clear" title="Очистить историю и сбросить статусы"><i class="fas fa-trash"></i> Сброс</button>
+            <!-- [NEW] БЛОК УПРАВЛЕНИЯ КВЕСТОМ -->
+            {{#if hasActiveQuest}}
+            <div class="gm-quest-controls">
+                <button id="dm-quest-offer" class="quest-btn-offer" title="Предложить Квест Игрокам">
+                    <i class="fas fa-exclamation"></i>
+                </button>
+                <button id="dm-quest-success" class="quest-btn-success" title="Квест: УСПЕХ (+10 Реп)">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button id="dm-quest-fail" class="quest-btn-fail" title="Квест: ПРОВАЛ (-10 Реп)">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+            {{/if}}
+            <!-- ------------------------ -->
+
+            <button id="dm-attack" class="attack-btn" title="Начать бой!"><i class="fas fa-swords"></i>
+                АТАКОВАТЬ</button>
+
+            <button id="dm-clear" title="Очистить историю и сбросить статусы"><i class="fas fa-trash"></i>
+                Сброс</button>
+        </div>
         {{else}}
-            <div style="flex: 1;"></div>
+        <div class="side-spacer"></div>
         {{/if}}
     </aside>
 

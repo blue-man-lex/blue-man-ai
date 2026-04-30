@@ -523,7 +523,7 @@ export class AIProviders {
         
         // --- ДОБАВЛЕНО: СЮЖЕТЫЙ КОНТЕКСТ И КВЕСТЫ ---
         let questContext = "";
-        const tokenDoc = canvas.tokens.placeables.find(t => t.name === npcData.name && t.actor?.type === "npc")?.document;
+        const tokenDoc = canvas.tokens.placeables.find(t => t.name === npcData.name && (t.actor?.type === "npc" || t.actor?.type === "mook"))?.document;
 
         if (tokenDoc) {
             const mainArcUuid = this.getCachedSetting("worldLoreJournal");

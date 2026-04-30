@@ -15,10 +15,10 @@ export class BlueManDialog extends FormApplication {
         this.localHistoryOverride = null;
         this._savedInputText = "";
 
-        const rawBio = npcToken.actor.system.details?.biography?.value || "";
-        const cleanText = rawBio.replace(/<\/?[^>]+(>|$)/g, " ");
-        const match = cleanText.match(/(?:Секрет|Secret)[\s:\-.,;]*([^\.\n!?]+)/i);
-        this.secretText = match ? match[1].trim() : "";
+        // Используем адаптер системы для получения биографии и секрета
+        const adapter = game.blueManAI?.adapter;
+        const bioData = adapter ? adapter.getBio(npcToken.actor, npcToken) : { secret: "None" };
+        this.secretText = (bioData.secret && bioData.secret !== "None") ? bioData.secret : "";
 
         this._announcePresence();
     }
@@ -119,7 +119,7 @@ export class BlueManDialog extends FormApplication {
             classes: ["blue-man-ai-window"],
             template: "modules/blue-man-ai/templates/dialog.html",
             width: 1100, 
-            height: 750,
+            height: 850,
             resizable: true,
             title: "Диалог с NPC"
         });
@@ -244,8 +244,35 @@ export class BlueManDialog extends FormApplication {
             BlueManButtonHandler.handleAnalysis(this);
         });
 
+        // Применяем динамические цвета и позиции из data-атрибутов (чтобы избежать ошибок линтера в HTML)
+        html.find('[data-border-color]').each((i, el) => {
+            const color = el.dataset.borderColor;
+            if (color) {
+                if (el.classList.contains('chat-message')) el.style.borderLeftColor = color;
+                else el.style.borderColor = color;
+            }
+        });
+        html.find('[data-text-color]').each((i, el) => {
+            const color = el.dataset.textColor;
+            if (color) el.style.color = color;
+        });
+        html.find('[data-left-pct]').each((i, el) => {
+            const pct = el.dataset.leftPct;
+            if (pct) el.style.left = `${pct}%`;
+        });
+
         html.find('#send-msg, #dm-send').click((e) => { e.preventDefault(); this._onSendMessage(); });
         html.find('#ai-input').keydown(e => { if (e.key === "Enter") { e.preventDefault(); this._onSendMessage(); } });
+
+        // ФИНАЛЬНЫЙ УДАР ПО КНОПКЕ EXEC_ (Силовое перекрашивание через JS)
+        const execBtn = html.find('#dm-send')[0];
+        if (execBtn) {
+            execBtn.style.setProperty('background', '#050505', 'important');
+            execBtn.style.setProperty('background-color', '#050505', 'important');
+            execBtn.style.setProperty('background-image', 'none', 'important');
+            execBtn.style.setProperty('border', '1px solid #ff003c', 'important');
+            execBtn.style.setProperty('color', '#ffffff', 'important');
+        }
         
         html.find('#dm-whisper').click((e) => {
             e.preventDefault();

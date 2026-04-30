@@ -1,5 +1,6 @@
 import { MOD_ID } from '../../core/settings.js';
 import { BlueManFlagHandler } from '../../core/flag-handler.js';
+import { BlueManSystemManager } from '../adapters/system-manager.js';
 
 export class BlueManStealDialog extends FormApplication {
     constructor(playerToken, npcToken) {
@@ -20,9 +21,10 @@ export class BlueManStealDialog extends FormApplication {
     }
 
     render(force, options) {
-        const items = this.npcToken.actor.items.filter(i => 
-            ["weapon", "equipment", "consumable", "tool", "loot", "backpack"].includes(i.type)
-        );
+        const adapter = BlueManSystemManager.adapter;
+        // Используем адаптер для фильтрации предметов инвентаря
+        const allowedTypes = ["weapon", "equipment", "consumable", "tool", "loot", "backpack"];
+        const items = this.npcToken.actor.items.filter(i => allowedTypes.includes(i.type));
 
         const currentDC = 10 + (this.stolenCount * 5); 
         
@@ -73,29 +75,21 @@ export class BlueManStealDialog extends FormApplication {
 
         const currentDC = 10 + (this.stolenCount * 5);
         const playerActor = this.playerToken.actor;
+        const adapter = BlueManSystemManager.adapter;
         
-        // --- FIX: Золотая формула модификатора ---
-        const skillId = "sle"; // Sleight of Hand
-        const skillData = playerActor.system.skills[skillId];
-        
-        // 1. Берем Total (если есть)
-        // 2. Если нет, берем Ability Mod (Ловкость), к которой привязан навык.
-        // Это гарантирует учет твоих +45 от статов.
-        let skillMod = skillData?.total;
-        
-        if (skillMod === undefined || skillMod === null) {
-            const abilityKey = skillData?.ability || "dex";
-            skillMod = playerActor.system.abilities[abilityKey]?.mod || 0;
-        }
+        // Получаем модификатор навыка через адаптер
+        const skillMod = adapter.getSkillValue(playerActor, "slt"); // Ловкость рук
 
         console.log(`Blue Man AI | Steal Item Check: Actor=${playerActor.name}, Mod=${skillMod}`);
 
-        const roll = new Roll("1d20 + @mod", { mod: skillMod });
+        const rollFormula = adapter.getSkillRollFormula(skillMod);
+        const roll = new Roll(rollFormula);
         await roll.evaluate();
-        // -----------------------------------------
         
         const total = roll.total;
-        const npcPassive = this.npcToken.actor.system.skills?.prc?.passive || 10;
+        
+        // Пассивная внимательность NPC через адаптер
+        const npcPassive = adapter.getPassiveSkill(this.npcToken.actor, "prc");
         
         const targetDC = Math.max(currentDC, npcPassive);
 
@@ -104,6 +98,7 @@ export class BlueManStealDialog extends FormApplication {
             ui.notifications.info(`Успех! (Roll: ${total} vs DC ${targetDC}). Вы украли ${item.name}.`);
             
             const itemData = item.toObject();
+            itemData.originId = item.id; // [FIX] Store original ID for deletion
             delete itemData._id;
             itemData.system.quantity = 1;
 

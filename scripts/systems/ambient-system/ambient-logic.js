@@ -2,7 +2,8 @@ import { MOD_ID } from '../../core/settings.js';
 import { AIProviders } from '../../core/ai-providers.js';
 import { AMBIENT_PHRASES } from './ambient-phrases.js';
 import { NpcCollector } from '../../core/npc-collector.js';
-import { BlueManFlagHandler } from '../../core/flag-handler.js'; // [NEW] Импорт
+import { BlueManFlagHandler } from '../../core/flag-handler.js';
+import { BlueManSystemManager } from '../../systems/adapters/system-manager.js';
 
 export function initializeAmbientTalk() {
     if (!game.user.isGM) return;
@@ -13,7 +14,7 @@ export function initializeAmbientTalk() {
         const isEnabled = game.settings.get(MOD_ID, "allowAmbientTalk");
         if (!isEnabled) return; 
 
-        const npcs = canvas.tokens.placeables.filter(t => t.actor?.type === "npc" && !t.document.hidden);
+        const npcs = canvas.tokens.placeables.filter(t => (t.actor?.type === "npc" || t.actor?.type === "mook") && !t.document.hidden);
         if (npcs.length === 0) return;
 
         const players = canvas.tokens.placeables.filter(t => t.actor?.hasPlayerOwner);
@@ -56,8 +57,9 @@ async function processAmbientNpc(npcToken, players) {
     let text = "";
     let isAi = false;
     const isEnemy = npcToken.document.disposition === -1;
-
-    const bio = (npcToken.actor.system.details.biography.value || "").toLowerCase();
+    const adapter = BlueManSystemManager.adapter;
+    const bioData = adapter ? adapter.getBio(npcToken.actor) : { full: "" };
+    const bio = (bioData.full || "").toLowerCase();
     const hasQuest = bio.includes("квест") || bio.includes("quest");
     const hasSecret = bio.includes("секрет") || bio.includes("secret");
     const isNamed = npcToken.name.split(" ").length > 1;
@@ -111,7 +113,8 @@ async function processAmbientNpc(npcToken, players) {
 function getTemplatePhrase(tokenDoc) {
     const actor = tokenDoc.actor;
     const name = tokenDoc.name.toLowerCase(); 
-    const type = actor.system.details.type?.value || "humanoid";
+    // Пытаемся найти тип существа (для DnD5e это .details.type, для других — просто humanoid)
+    const type = actor.system.details?.type?.value || actor.system.type?.value || "humanoid";
 
     if (game.modules.get("item-piles")?.active && 
         game.itempiles.API.isValidItemPile(tokenDoc) &&

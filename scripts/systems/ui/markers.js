@@ -1,27 +1,25 @@
 import { MOD_ID } from '../../core/settings.js';
+import { BlueManSystemManager } from '../adapters/system-manager.js';
 
 export class BlueManMarkers {
     static init() {
-        // [FIX] Используем refreshToken вместо renderToken.
-        // Это гарантирует, что маркер восстановится, даже если Foundry перерисует токен при загрузке сцены.
         Hooks.on('refreshToken', (token) => {
-            if (token.actor && token.actor.type === "npc") {
+            if (token.actor && (token.actor.type === "npc" || token.actor.type === "mook")) {
                  this.drawMarker(token);
             }
         });
     }
 
     static drawMarker(token) {
-        // 1. Проверка настроек
         const visibility = game.settings.get(MOD_ID, "markerVisibility");
         if (visibility === "none") return this.clearMarker(token);
         if (visibility === "gm" && !game.user.isGM) return this.clearMarker(token);
 
-        // 2. Анализ
-        // Если данных нет, выходим (маркер нарисуется при следующем refresh, когда данные придут)
-        if (!token.actor?.system?.details?.biography) return;
+        const adapter = BlueManSystemManager.adapter;
+        if (!adapter) return;
 
-        const bio = (token.actor.system.details.biography.value || "").toLowerCase();
+        const bioData = adapter.getBio(token.actor);
+        const bio = (bioData.full || "").toLowerCase();
         const cleanBio = bio.replace(/<[^>]*>/g, " ");
 
         let icon = null;

@@ -211,6 +211,21 @@ export function registerSettings() {
         onChange: () => { canvas.tokens.placeables.forEach(t => t.draw()); }
     });
 
+    game.settings.register(MOD_ID, "theme", {
+        name: "Визуальная тема",
+        hint: "Выберите оформление интерфейса диалогов.",
+        scope: "world",
+        config: true,
+        type: String,
+        choices: {
+            "auto": "Авто (по системе)",
+            "default": "Классика (Fantasy)",
+            "cpr": "Cyberpunk Red (Neon)"
+        },
+        default: "auto",
+        onChange: () => { window.location.reload(); } // Перезагрузка для применения стилей
+    });
+
     // --- 3. ПОВЕДЕНИЕ ---
     game.settings.register(MOD_ID, "allowAmbientTalk", {
         name: "Включить Оживление Мира (Ambient)",

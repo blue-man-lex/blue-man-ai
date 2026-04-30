@@ -1,11 +1,9 @@
 {
   "id": "blue-man-ai",
   "title": "Blue Man AI",
-  "description": "Интеграция Gemini ИИ для NPC: Живые диалоги, Торговля, Квесты и Оживление мира.",
-  "version": "0.13.16",
-  "url": "https://github.com/blue-man-lex/blue-man-ai",
-  "manifest": "https://raw.githubusercontent.com/blue-man-lex/blue-man-ai/main/module.json",
-  "download": "https://github.com/blue-man-lex/blue-man-ai/download/0.13.16/blue-man-ai.zip",
+  "description": "<p>Интеграция Gemini ИИ для NPC: Живые диалоги, Торговля, Квесты и Оживление мира.</p>",
+  "version": "0.13.17",
+  "manifest": "",
   "compatibility": {
     "minimum": "12",
     "verified": "13"
@@ -13,15 +11,16 @@
   "authors": [
     {
       "name": "Art_lex",
-      "url": "",
-      "discord": ""
+      "flags": {}
     }
   ],
   "esmodules": [
     "scripts/core/main.js"
   ],
   "styles": [
-    "styles/style.css"
+    {
+      "src": "styles/style.css"
+    }
   ],
   "relationships": {
     "systems": [
@@ -31,12 +30,13 @@
         "compatibility": {
           "minimum": "4.0.0"
         }
+      },
+      {
+        "id": "cyberpunk-red-core",
+        "type": "system",
+        "compatibility": {}
       }
-    ],
-    "requires": [], 
-    "recommends": []
+    ]
   },
-  "url": "",
-  "manifest": "",
-  "download": ""
+  "flags": {}
 }
