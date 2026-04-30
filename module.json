@@ -2,8 +2,13 @@
   "id": "blue-man-ai",
   "title": "Blue Man AI",
   "description": "<p>Интеграция Gemini ИИ для NPC: Живые диалоги, Торговля, Квесты и Оживление мира.</p>",
-  "version": "0.13.17",
-  "manifest": "",
+  "version": "1.13.1",
+  "socket": true,
+  "url": "https://github.com/blue-man-lex/blue-man-ai",
+  "manifest": "https://raw.githubusercontent.com/blue-man-lex/blue-man-ai/main/module.json",
+  "download": "https://github.com/blue-man-lex/blue-man-ai/releases/download/1.13.1/blue-man-ai.zip",
+  "readme": "https://github.com/blue-man-lex/blue-man-ai/blob/main/README.md",
+  "bugs": "https://github.com/blue-man-lex/blue-man-ai/issues",
   "compatibility": {
     "minimum": "12",
     "verified": "13"
