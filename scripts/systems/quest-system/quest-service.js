@@ -40,98 +40,68 @@ export class QuestService {
             tempDiv.querySelectorAll(sel).forEach(el => el.remove());
         });
 
-        // --- 3. ПАРСЕР НАГРАД ---
+        // --- 3. ПАРСЕР НАГРАД И ЧИСТКА МЕТАДАННЫХ ---
         let rewards = { currency: [], items: [], text: "" };
-        let fullHtml = tempDiv.innerHTML; // Работаем с HTML строкой, чтобы найти и вырезать кусок
+        
+        // Массив регулярок для удаления "технических" строк из текста (чтобы не дублировались)
+        const metaRegexes = [
+            /(\*\*|###)?\s*(?:Награда|Reward|Rewards)[:\s]+(.*?)(?:<br>|<\/p>|$)/i,
+            /(\*\*|###)?\s*(?:Выдает|Источник|Source|Giver)[:\s]+(.*?)(?:<br>|<\/p>|$)/i,
+            /(\*\*|###)?\s*(?:Статус|Status)[:\s]+(.*?)(?:<br>|<\/p>|$)/i
+        ];
 
-        // Ищем строку вида "**Награда:** 100gp..." или "### Награда: 100gp..."
-        // Regex ловит строку, содержащую деньги или UUID
-        const mechLineRegex = /(\*\*|###)?\s*(?:Награда|Reward|Rewards)[:\s]+(.*?)(?:<br>|<\/p>|$)/i;
-        const mechMatch = fullHtml.match(mechLineRegex);
+        let fullHtml = tempDiv.innerHTML;
 
+        // 3a. Извлекаем награды специальной регуляркой
+        const mechMatch = fullHtml.match(metaRegexes[0]);
         if (mechMatch) {
-            const rewardLine = mechMatch[0]; // Вся найденная строка (для удаления)
-            const contentLine = mechMatch[2]; // Только контент (для парсинга)
+            const contentLine = mechMatch[2];
 
             // A. Валюта
             const moneyRegex = /(\d+)\s*(pp|gp|ep|sp|cp|пм|зм|эм|см|мм)/gi;
             const moneyMatches = [...contentLine.matchAll(moneyRegex)];
-            
             moneyMatches.forEach(m => {
                 let type = m[2].toLowerCase();
                 let icon = "fa-coins";
-                
-                if (["pp", "пм"].includes(type)) icon = "fa-gem"; // Платина
-                if (["gp", "зм"].includes(type)) icon = "fa-coins"; // Золото
-                if (["ep", "эм"].includes(type)) icon = "fa-bolt"; // Электрум
-                if (["sp", "см"].includes(type)) icon = "fa-moon"; // Серебро
-                if (["cp", "мм"].includes(type)) icon = "fa-circle"; // Медь
-
-                rewards.currency.push({
-                    amount: m[1],
-                    type: type.toUpperCase(),
-                    icon: icon
-                });
+                if (["pp", "пм"].includes(type)) icon = "fa-gem";
+                if (["gp", "зм"].includes(type)) icon = "fa-coins";
+                if (["sp", "см"].includes(type)) icon = "fa-moon";
+                rewards.currency.push({ amount: m[1], type: type.toUpperCase(), icon: icon });
             });
 
-            // B. Предметы (UUID)
-            // Ищем как текстовые @UUID, так и уже срендеренные ссылки <a data-uuid="...">
-            // 1. Ссылки Foundry
+            // B. Предметы
             const tempLineDiv = document.createElement("div");
             tempLineDiv.innerHTML = contentLine;
             const links = tempLineDiv.querySelectorAll("a[data-uuid]");
             links.forEach(a => {
-                rewards.items.push({
-                    name: a.innerText || "Предмет",
-                    uuid: a.dataset.uuid,
-                    icon: "fa-box-open"
-                });
+                rewards.items.push({ name: a.innerText || "Предмет", uuid: a.dataset.uuid, icon: "fa-box-open" });
             });
 
-            // 2. Текстовые @UUID (если вдруг не срендерились в HTML)
             const textUuidRegex = /@UUID\[([\w\.-]+)\](?:\{([^}]+)\})?/g;
             const textMatches = [...contentLine.matchAll(textUuidRegex)];
             textMatches.forEach(m => {
-                // Добавляем только если такого UUID еще нет (защита от дублей с <a>)
                 if (!rewards.items.find(i => i.uuid === m[1])) {
-                    rewards.items.push({
-                        name: m[2] || "Неизвестный предмет",
-                        uuid: m[1],
-                        icon: "fa-box-open"
-                    });
+                    rewards.items.push({ name: m[2] || "Предмет", uuid: m[1], icon: "fa-box-open" });
                 }
             });
 
-            // C. Если ничего не нашли, сохраняем как текст
             if (rewards.currency.length === 0 && rewards.items.length === 0) {
-                // Чистим от HTML тегов для чистого текста
-                rewards.text = tempLineDiv.innerText.substring(0, 100);
-            }
-
-            // D. ВЫРЕЗАЕМ ЭТУ СТРОКУ ИЗ ОПИСАНИЯ
-            // Чтобы она не дублировалась текстом
-            fullHtml = fullHtml.replace(rewardLine, "");
-        } else {
-            // Если "технической" строки нет, пробуем найти просто блок ### Награда и взять текст оттуда
-            // (Фолбэк для старых квестов)
-            const blockMatch = tempDiv.innerText.match(/###\s*(?:Награда|Reward)([\s\S]*?)$/i);
-            if (blockMatch) {
-                // Тут мы не парсим валюту, просто выводим текст внизу, если он короткий
-                const text = blockMatch[1].trim();
-                if (text.length < 100) rewards.text = text;
+                rewards.text = tempLineDiv.innerText.trim().substring(0, 100);
             }
         }
 
-        const safeHtml = fullHtml; // Обновленный HTML без строки награды
+        // 3b. ЧИСТКА: Удаляем ВСЕ технические строки из HTML
+        metaRegexes.forEach(regex => {
+            fullHtml = fullHtml.replace(regex, "");
+        });
 
-        // 4. ПРЕВЬЮ
+        const safeHtml = fullHtml;
+
+        // 4. ПРЕВЬЮ (чистый текст без тегов и метаданных)
+        tempDiv.innerHTML = fullHtml; // Используем уже очищенный HTML
         let plainText = tempDiv.innerText || tempDiv.textContent || "";
-        // Убираем техническую строку из превью тоже
-        if (mechMatch) {
-             plainText = plainText.replace(mechMatch[0].replace(/<[^>]*>/g, ""), ""); 
-        }
-        plainText = plainText.replace(/[#*`_~]/g, "").replace(/\s+/g, " "); 
-        const preview = plainText.trim().substring(0, 160) + "...";
+        plainText = plainText.replace(/[#*`_~]/g, "").replace(/\s+/g, " ").trim(); 
+        const preview = plainText.substring(0, 160) + (plainText.length > 160 ? "..." : "");
 
         // 5. КАТЕГОРИИ И ТИПЫ
         let category = "Вне сюжета"; 

@@ -1,6 +1,7 @@
 import { MOD_ID } from '../../core/settings.js';
 import { AIProviders } from '../../core/ai-providers.js';
 import { AMBIENT_PHRASES } from './ambient-phrases.js';
+import { AMBIENT_PHRASES_CPR } from './ambient-phrases-cpr.js';
 import { NpcCollector } from '../../core/npc-collector.js';
 import { BlueManFlagHandler } from '../../core/flag-handler.js';
 import { BlueManSystemManager } from '../../systems/adapters/system-manager.js';
@@ -12,7 +13,10 @@ export function initializeAmbientTalk() {
         if (game.paused) return;
 
         const isEnabled = game.settings.get(MOD_ID, "allowAmbientTalk");
-        if (!isEnabled) return; 
+        const isEmulation = game.settings.get(MOD_ID, "enableAmbientEmulation");
+        
+        // Если выключены обе функции — ничего не делаем
+        if (!isEnabled && !isEmulation) return; 
 
         const npcs = canvas.tokens.placeables.filter(t => (t.actor?.type === "npc" || t.actor?.type === "mook") && !t.document.hidden);
         if (npcs.length === 0) return;
@@ -65,8 +69,11 @@ async function processAmbientNpc(npcToken, players) {
     const isNamed = npcToken.name.split(" ").length > 1;
 
     const allowAi = !isEnemy || (hasQuest || hasSecret || isNamed);
+    const isEmulationOnly = game.settings.get(MOD_ID, "enableAmbientEmulation");
+    const isAiEnabled = game.settings.get(MOD_ID, "allowAmbientTalk");
 
-    if (minDistance <= 5 && allowAi) {
+    // ИИ срабатывает только если включена главная настройка эмбиента и ВЫКЛЮЧЕНА имитация
+    if (minDistance <= 5 && allowAi && isAiEnabled && !isEmulationOnly) {
         const activeProvider = game.settings.get(MOD_ID, "aiProvider") || "gemini";
         // Пытаемся взять отдельный эмбиент-ключ, если его нет — берем основной ключ провайдера
         const ambientKey = AIProviders.getAmbientApiKey(activeProvider) || AIProviders.getApiKey(activeProvider);
@@ -112,27 +119,53 @@ async function processAmbientNpc(npcToken, players) {
 
 function getTemplatePhrase(tokenDoc) {
     const actor = tokenDoc.actor;
-    const name = tokenDoc.name.toLowerCase(); 
+    
+    // Определяем нужную базу фраз на основе текущей игровой системы
+    const isCPR = game.system.id === "cyberpunk-red-core";
+    const phraseDatabase = isCPR ? AMBIENT_PHRASES_CPR : AMBIENT_PHRASES;
+
+    // Получаем биографию
+    const adapter = BlueManSystemManager.adapter;
+    const bioData = adapter ? adapter.getBio(actor) : { full: "" };
+    
+    // Объединяем имя и биографию, переводим в нижний регистр для поиска
+    const searchStr = (tokenDoc.name + " " + (bioData.full || "")).toLowerCase();
+
+    // 1. Ищем теги в имени или биографии (игнорируя решетки и регистр)
+    for (const key of Object.keys(phraseDatabase)) {
+        const category = phraseDatabase[key];
+        if (category.tags) {
+            const isMatch = category.tags.some(tag => {
+                // Очищаем тег от символа # и лишних пробелов
+                const cleanTag = tag.replace('#', '').trim().toLowerCase();
+                return searchStr.includes(cleanTag);
+            });
+            
+            if (isMatch) {
+                const list = category.phrases;
+                return list[Math.floor(Math.random() * list.length)];
+            }
+        }
+    }
+
     // Пытаемся найти тип существа (для DnD5e это .details.type, для других — просто humanoid)
     const type = actor.system.details?.type?.value || actor.system.type?.value || "humanoid";
 
+    // 2. Fallback логика для Item Piles
     if (game.modules.get("item-piles")?.active && 
         game.itempiles.API.isValidItemPile(tokenDoc) &&
         tokenDoc.getFlag("item-piles", "data")?.type === "merchant") {
-        const list = AMBIENT_PHRASES.merchant.phrases;
+        const list = phraseDatabase.merchant.phrases;
         return list[Math.floor(Math.random() * list.length)];
     }
 
+    // 3. Fallback логика для зверей/монстров
     if (type !== "humanoid") {
-        const list = AMBIENT_PHRASES.beast.phrases;
+        const list = phraseDatabase.beast.phrases;
         return list[Math.floor(Math.random() * list.length)];
     }
 
-    if (AMBIENT_PHRASES.guard.keywords.some(k => name.includes(k))) {
-        const list = AMBIENT_PHRASES.guard.phrases;
-        return list[Math.floor(Math.random() * list.length)];
-    }
-
-    const list = AMBIENT_PHRASES.commoner.phrases;
+    // 4. Fallback логика для простолюдинов (дефолт)
+    const list = phraseDatabase.commoner.phrases;
     return list[Math.floor(Math.random() * list.length)];
 }

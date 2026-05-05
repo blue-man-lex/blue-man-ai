@@ -210,7 +210,8 @@
     width: calc(100% - 3px) !important;
     /* Ужи на 3 пикселя */
     height: 100% !important;
-    object-fit: contain !important;
+    object-fit: cover !important; /* Меняем на cover для единообразия и лучшего заполнения новой крупной рамки */
+    object-position: center 1% !important;
     position: absolute;
     top: 0;
     left: 1.5px !important;

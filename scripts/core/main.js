@@ -2,14 +2,14 @@ import { registerSettings, MOD_ID } from './settings.js';
 import { BlueManDebugger } from './debug.js';
 import { BlueManDialog } from '../systems/ui/dialog-window.js';
 import { initializeAmbientTalk } from '../systems/ambient-system/ambient-logic.js';
-import { AIProviders } from './ai-providers.js'; 
-import { callGemini } from './ai-logic.js'; 
+import { AIProviders } from './ai-providers.js';
+import { callGemini } from './ai-logic.js';
 import { NpcCollector } from './npc-collector.js';
 import { applyCompatibilityFixes } from '../systems/integrations/compatibility.js';
 import { initPatrolIntegration } from '../systems/integrations/patrol.js';
 import { BlueManFlagHandler } from './flag-handler.js';
 import { BlueManMarkers } from '../systems/ui/markers.js';
-import { BlueManQuestLog } from '../systems/quest-system/quest-log.js'; 
+import { BlueManQuestLog } from '../systems/quest-system/quest-log.js';
 import { BlueManRewardDialog } from '../systems/quest-system/reward-dialog.js';
 import { NoticeBoardConfig, NoticeBoardApp } from '../systems/quest-system/notice-board.js';
 import { BlueManSystemManager } from '../systems/adapters/system-manager.js';
@@ -22,7 +22,7 @@ Hooks.once('init', () => {
     // --- ДОБАВЛЕНО: ЗАГРУЗКА ТЕМЫ ---
     const theme = game.settings.get(MOD_ID, "theme");
     const systemId = game.system.id;
-    
+
     if (theme === "cpr" || (theme === "auto" && systemId === "cyberpunk-red-core")) {
         const link = document.createElement("link");
         link.rel = "stylesheet";
@@ -31,16 +31,16 @@ Hooks.once('init', () => {
         document.head.appendChild(link);
         console.log("Blue Man AI | Загружена тема: Cyberpunk Red");
     }
-    
+
     game.keybindings.register(MOD_ID, "interactNpc", {
         name: "Поговорить с NPC / Открыть Доску",
         hint: "Наведите мышь на NPC или Доску и нажмите клавишу.",
         editable: [{ key: "KeyX" }],
         onDown: () => attemptInteractionSmart(),
-        restricted: false, 
+        restricted: false,
         precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
     });
-    
+
     console.log(`Blue Man AI | Init complete. v0.13.16 (${game.blueManAI.adapter.id} adapter ready).`);
 });
 
@@ -67,17 +67,17 @@ Hooks.on("updateToken", (tokenDoc, change, options, userId) => {
 Hooks.on("renderChatMessageHTML", (message, html) => {
     const flags = message.flags?.[MOD_ID];
     if (flags && (
-        flags.action === "aiRequest" || 
-        flags.action === "forceOpen" || 
-        flags.action === "set" || 
-        flags.action === "unset" || 
-        flags.action === "changeReputation" || 
-        flags.action === "transferItem" || 
-        flags.action === "stealItem" || 
+        flags.action === "aiRequest" ||
+        flags.action === "forceOpen" ||
+        flags.action === "set" ||
+        flags.action === "unset" ||
+        flags.action === "changeReputation" ||
+        flags.action === "transferItem" ||
+        flags.action === "stealItem" ||
         flags.action === "triggerAlarm" ||
-        flags.action === "showQuestOffer" || 
+        flags.action === "showQuestOffer" ||
         flags.action === "acceptQuest" ||
-        flags.action === "openRewardWindow" || 
+        flags.action === "openRewardWindow" ||
         flags.action === "openBoardRewardWindow" ||
         flags.action === "claimReward" ||
         flags.action === "showBubble" || // [NEW] Скрываем бабл-команду
@@ -86,12 +86,12 @@ Hooks.on("renderChatMessageHTML", (message, html) => {
         if (html instanceof HTMLElement) {
             html.style.display = "none";
         }
-        return false; 
+        return false;
     }
 });
 
 Hooks.once('ready', () => {
-    initPatrolIntegration(); 
+    initPatrolIntegration();
     initializeAmbientTalk(); // ✅ Возвращаем - работает с условиями, не спамит AI
     BlueManMarkers.init();
     Hooks.on('canvasReady', makeBoardsInteractive);
@@ -110,8 +110,8 @@ Hooks.once('ready', () => {
             if (token) {
                 // Вызываем метод отрисовки бабла (он локальный для каждого клиента)
                 // Хак с пробелами для длительности
-                const padding = "\u200B".repeat(80); 
-                
+                const padding = "\u200B".repeat(80);
+
                 canvas.hud.bubbles.say(token, text + padding, {
                     emote: emote ?? false,
                     pan: false,
@@ -129,23 +129,23 @@ Hooks.once('ready', () => {
                 const playerId = message.getFlag(MOD_ID, "playerTokenId");
                 const greeting = message.getFlag(MOD_ID, "greetingText");
                 const patrolId = message.getFlag(MOD_ID, "patrolId");
-                
+
                 const npcToken = canvas.tokens.get(npcId);
                 const playerToken = canvas.tokens.get(playerId);
 
                 if (npcToken && playerToken) {
                     const localHistory = npcToken.document.getFlag(MOD_ID, 'chatHistory') || [];
-                    
+
                     const tempMsg = {
                         speaker: npcToken.name,
                         text: greeting,
                         isSystem: false,
                         isWhisper: false,
-                        ownerId: userId 
+                        ownerId: userId
                     };
                     const lastMsg = localHistory[localHistory.length - 1];
                     if (!lastMsg || lastMsg.text !== greeting) {
-                         localHistory.push(tempMsg);
+                        localHistory.push(tempMsg);
                     }
 
                     const dialog = new BlueManDialog(npcToken, playerToken);
@@ -154,7 +154,7 @@ Hooks.once('ready', () => {
                     dialog.render(true);
                 }
             }
-            return; 
+            return;
         }
 
         if (action === "showQuestOffer") {
@@ -181,7 +181,7 @@ Hooks.once('ready', () => {
                             label: "Принять",
                             icon: "<i class='fas fa-check'></i>",
                             callback: async () => {
-                                await BlueManFlagHandler.acceptQuest(questUuid, sourceName); 
+                                await BlueManFlagHandler.acceptQuest(questUuid, sourceName);
                                 ui.notifications.info("Запрос отправлен...");
                                 setTimeout(() => {
                                     new BlueManQuestLog().render(true);
@@ -198,14 +198,14 @@ Hooks.once('ready', () => {
             }
             return;
         }
-        
+
         if (action === "openRewardWindow") {
             const amITarget = message.whisper.includes(game.user.id);
 
             if (amITarget) {
                 const tokenId = message.getFlag(MOD_ID, "tokenId");
                 const token = canvas.tokens.get(tokenId);
-                
+
                 if (token) {
                     new BlueManRewardDialog(token).render(true);
                 }
@@ -219,7 +219,7 @@ Hooks.once('ready', () => {
             if (amITarget) {
                 const actorId = message.getFlag(MOD_ID, "actorId");
                 const actor = game.actors.get(actorId);
-                
+
                 if (actor) {
                     // Создаем временный токен для актера-болванки
                     const tempToken = {
@@ -239,7 +239,7 @@ Hooks.once('ready', () => {
             const tokenId = message.getFlag(MOD_ID, "tokenId");
             const itemIndex = message.getFlag(MOD_ID, "itemIndex");
             const actorId = message.getFlag(MOD_ID, "actorId");
-            
+
             await BlueManFlagHandler._processClaim(tokenId, itemIndex, actorId);
             return;
         }
@@ -269,12 +269,12 @@ Hooks.once('ready', () => {
         };
 
         setTimeout(async () => {
-            if (message && message.id) try { await message.delete(); } catch(e) {}
-        }, 1000); 
+            if (message && message.id) try { await message.delete(); } catch (e) { }
+        }, 1000);
 
         const scene = game.scenes.get(flags.sceneId) || canvas.scene;
         const npcTokenDoc = scene?.tokens.get(flags.tokenId);
-        
+
         try {
             if (flags.action === "set" && npcTokenDoc) await npcTokenDoc.setFlag(MOD_ID, flags.key, flags.value);
             if (flags.action === "unset" && npcTokenDoc) await npcTokenDoc.unsetFlag(MOD_ID, flags.key);
@@ -300,7 +300,7 @@ Hooks.once('ready', () => {
             }
 
             if (flags.action === "distributeBoardRewards") {
-                console.log("🎁 Получен запрос на раздачу наград доски:", { 
+                console.log("🎁 Получен запрос на раздачу наград доски:", {
                     flags: flags,
                     rewards: flags.rewards,
                     rewardsType: typeof flags.rewards,
@@ -308,7 +308,7 @@ Hooks.once('ready', () => {
                     allFlags: message.flags
                 });
                 await BlueManFlagHandler._distributeBoardRewards(flags.rewards, flags.questName);
-                
+
                 console.log("✅ Board rewards distributed:", flags.questName);
             }
 
@@ -316,7 +316,7 @@ Hooks.once('ready', () => {
                 const tokenId = flags.tokenId;
                 const itemIndex = flags.itemIndex;
                 const actorId = flags.actorId;
-                
+
                 await BlueManFlagHandler._processClaim(tokenId, itemIndex, actorId);
                 return;
             }
@@ -334,7 +334,7 @@ Hooks.once('ready', () => {
                     const pLangs = new Set(adapter.getLanguages(playerActor));
                     const nLangs = new Set(adapter.getLanguages(npcTokenDoc.actor));
                     let shared = [...pLangs].filter(x => nLangs.has(x));
-                    
+
                     if (shared.length > 0) {
                         languageInfo.hasShared = true;
                         languageInfo.sharedLang = shared[0];
@@ -347,8 +347,8 @@ Hooks.once('ready', () => {
                 let history = flags.history || npcTokenDoc.getFlag(MOD_ID, 'chatHistory') || [];
                 if (flags.history) await npcTokenDoc.setFlag(MOD_ID, 'chatHistory', history);
 
-                let response = await callGemini(flags.text, npcData, { 
-                    socialStatus: flags.socialStatus, 
+                let response = await callGemini(flags.text, npcData, {
+                    socialStatus: flags.socialStatus,
                     isWhisper: flags.isWhisper,
                     languageInfo: languageInfo
                 }, history);
@@ -356,7 +356,7 @@ Hooks.once('ready', () => {
                 let opinionDelta = 0;
                 const opinionRegex = /\[OPINION:?\s*([+-]?\d+)\s*\]/gi;
                 const opinionMatch = [...response.matchAll(opinionRegex)];
-                
+
                 if (opinionMatch.length > 0) {
                     opinionDelta = parseInt(opinionMatch[0][1], 10);
                     response = response.replace(opinionRegex, "").trim();
@@ -366,20 +366,20 @@ Hooks.once('ready', () => {
                     await BlueManFlagHandler.changeReputation(npcTokenDoc, opinionDelta);
                     const msg = opinionDelta > 0 ? "НПС: Это понравилось (+1)" : "НПС: Это не понравилось (-1)";
                     const color = opinionDelta > 0 ? "#2ecc71" : "#e74c3c";
-                    
-                    history.push({ 
-                        speaker: "Система", 
-                        text: `<span style="color:${color}; font-size: 0.9em;"><i>${msg}</i></span>`, 
-                        isSystem: true 
+
+                    history.push({
+                        speaker: "Система",
+                        text: `<span style="color:${color}; font-size: 0.9em;"><i>${msg}</i></span>`,
+                        isSystem: true
                     });
                 }
 
-                history.push({ 
-                    speaker: npcData.name, 
-                    text: response, 
-                    isSystem: false, 
-                    isWhisper: false, 
-                    ownerId: flags.userId 
+                history.push({
+                    speaker: npcData.name,
+                    text: response,
+                    isSystem: false,
+                    isWhisper: false,
+                    ownerId: flags.userId
                 });
                 await npcTokenDoc.setFlag(MOD_ID, 'chatHistory', history);
             }
@@ -405,7 +405,7 @@ function safeNotify(type, message) {
 function attemptInteractionSmart() {
     // 1. ПРОВЕРКА ПОД КУРСОРОМ (Canvas)
     const mousePos = canvas.mousePosition;
-    
+
     // Ищем тайл под курсором (Доска объявлений)
     const hoveredTile = canvas.tiles.placeables.find(t => t.bounds.contains(mousePos.x, mousePos.y));
     if (hoveredTile) {
@@ -419,14 +419,14 @@ function attemptInteractionSmart() {
     // 2. СТАНДАРТНАЯ ЛОГИКА NPC
     let potentialPlayer = null;
     let potentialNpc = null;
-    
+
     // Ищем игрока
     if (canvas.tokens.controlled.length > 0) {
         potentialPlayer = canvas.tokens.controlled.find(t => t.actor?.hasPlayerOwner) || canvas.tokens.controlled[0];
     } else if (game.user.character) {
         potentialPlayer = canvas.tokens.placeables.find(t => t.actor?.id === game.user.character.id);
     }
-    
+
     // Ищем NPC под курсором
     if (canvas.tokens.hover) {
         const actor = canvas.tokens.hover.actor;
@@ -438,7 +438,7 @@ function attemptInteractionSmart() {
             }
         }
     }
-    
+
     if (!potentialPlayer) {
         safeNotify("warn", "Не найден ваш персонаж на сцене.");
         return;
@@ -447,14 +447,14 @@ function attemptInteractionSmart() {
         safeNotify("warn", "Выберите NPC для разговора или наведите на доску.");
         return;
     }
-    
+
     new BlueManDialog(potentialNpc, potentialPlayer).render(true);
 }
 
 function initiateChatFromHUD(npcToken) {
     const targets = Array.from(game.user.targets);
     let playerToken = targets[0] || canvas.tokens.controlled[0];
-    
+
     if (!playerToken) {
         const userChar = game.user.character;
         if (userChar) {
@@ -479,7 +479,7 @@ Hooks.on('renderTokenHUD', (app, html, data) => {
     if (!token?.actor) return;
 
     const $html = $(html);
-    const $colLeft = $html.find('.col.left'); 
+    const $colLeft = $html.find('.col.left');
 
     if (!$colLeft.length) {
         console.warn("Blue Man AI | HUD Error: .col.left not found!");
@@ -487,7 +487,7 @@ Hooks.on('renderTokenHUD', (app, html, data) => {
     }
 
     if (token.actor.type === "npc" || token.actor.type === "mook") {
-        if ($colLeft.find('.blue-man-chat-btn').length) return; 
+        if ($colLeft.find('.blue-man-chat-btn').length) return;
 
         const chatBtn = $(`
             <div class="control-icon blue-man-chat-btn" title="Поговорить с NPC (Blue Man AI)" style="cursor: pointer;">
@@ -495,10 +495,10 @@ Hooks.on('renderTokenHUD', (app, html, data) => {
             </div>
         `);
 
-        chatBtn.click((ev) => { 
-            ev.preventDefault(); 
-            ev.stopPropagation(); 
-            initiateChatFromHUD(token); 
+        chatBtn.click((ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            initiateChatFromHUD(token);
         });
 
         // APPEND = BOTTOM
@@ -514,9 +514,9 @@ Hooks.on('renderTokenHUD', (app, html, data) => {
             </div>
         `);
 
-        questBtn.click((ev) => { 
-            ev.preventDefault(); 
-            ev.stopPropagation(); 
+        questBtn.click((ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
             new BlueManQuestLog().render(true);
         });
 
@@ -527,31 +527,31 @@ Hooks.on('renderTokenHUD', (app, html, data) => {
 
 Hooks.on('renderTileHUD', (app, html, data) => {
     if (!game.user.isGM) return;
-    
+
     const tileDocument = app.object.document;
     const $html = $(html);
     const $colRight = $html.find('.col.right');
-    
+
     if (!$colRight.length) {
         console.warn("Blue Man AI | Tile HUD Error: .col.right not found!");
         return;
     }
-    
+
     // Проверяем, нет ли уже кнопки
     if ($colRight.find('.blue-man-notice-board-btn').length) return;
-    
+
     const noticeBoardBtn = $(`
         <div class="control-icon blue-man-notice-board-btn" title="Настроить Доску Объявлений" style="cursor: pointer;">
             <i class="fas fa-clipboard-list" style="color:#3498db;"></i>
         </div>
     `);
-    
-    noticeBoardBtn.click((ev) => { 
-        ev.preventDefault(); 
-        ev.stopPropagation(); 
+
+    noticeBoardBtn.click((ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
         new NoticeBoardConfig(tileDocument).render(true);
     });
-    
+
     $colRight.append(noticeBoardBtn);
 });
 
@@ -560,8 +560,8 @@ Hooks.on('updateToken', (tokenDocument, change, options, userId) => {
     if (change.flags?.[MOD_ID]) {
         Object.values(ui.windows).forEach(app => {
             if (app instanceof BlueManDialog && app.npcToken.id === tokenDocument.id) {
-                app.localHistoryOverride = null; 
-                app.render(false); 
+                app.localHistoryOverride = null;
+                app.render(false);
             }
         });
     }
@@ -577,7 +577,7 @@ Hooks.on('updateToken', (tokenDocument, change, options, userId) => {
                             if (game.itempiles.API) {
                                 game.itempiles.API.renderItemPileInterface(tokenDocument);
                             }
-                        }, 100); 
+                        }, 100);
                     });
                 }
             }
@@ -592,7 +592,7 @@ Hooks.on('updateActor', (actor, change, options, userId) => {
                 if (app.constructor.name === "MerchantApp") {
                     console.log("Blue Man AI | Detected Actor price change. Refreshing Test Tube...");
                     app.close().then(() => {
-                         setTimeout(() => {
+                        setTimeout(() => {
                             if (game.itempiles.API) {
                                 const token = actor.getActiveTokens()[0];
                                 if (token) game.itempiles.API.renderItemPileInterface(token.document);
@@ -627,6 +627,12 @@ function makeBoardsInteractive() {
         }
     }
 }
+
+Hooks.on('updateTile', (tileDocument, change) => {
+    if (change.flags?.[MOD_ID]?.board !== undefined) {
+        makeBoardsInteractive();
+    }
+});
 
 Hooks.on('updateTile', (tileDocument, change) => {
     if (change.flags?.[MOD_ID]?.board !== undefined) {

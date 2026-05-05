@@ -181,7 +181,7 @@ export function registerSettings() {
     game.settings.register(MOD_ID, "questData", {
         name: "Quest Database",
         scope: "world",
-        config: false, 
+        config: false,
         type: Array,
         default: []
     });
@@ -234,7 +234,16 @@ export function registerSettings() {
         type: Boolean,
         default: false
     });
-    
+
+    game.settings.register(MOD_ID, "enableAmbientEmulation", {
+        name: "Включить оживление Имитация",
+        hint: "Если включено, НПС будут использовать только заготовленные фразы (по тегам в биографии), без генерации ИИ.",
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: false
+    });
+
     game.settings.register(MOD_ID, "enablePatrolReaction", {
         name: "Реакция Патруля",
         scope: "world",
@@ -244,26 +253,26 @@ export function registerSettings() {
     });
 
     // --- 4. ГЛОБАЛЬНЫЙ ХАРАКТЕР ---
-    game.settings.register(MOD_ID, "tone", { 
-        name: "Тон (Глобальный)", 
-        scope: "world", 
-        config: true, 
-        type: Number, 
-        default: 50 
+    game.settings.register(MOD_ID, "tone", {
+        name: "Тон (Глобальный)",
+        scope: "world",
+        config: true,
+        type: Number,
+        default: 50
     });
-    game.settings.register(MOD_ID, "intelligence", { 
-        name: "Интеллект (Глобальный)", 
-        scope: "world", 
-        config: true, 
-        type: Number, 
-        default: 50 
+    game.settings.register(MOD_ID, "intelligence", {
+        name: "Интеллект (Глобальный)",
+        scope: "world",
+        config: true,
+        type: Number,
+        default: 50
     });
-    game.settings.register(MOD_ID, "eloquence", { 
-        name: "Красноречие (Глобальное)", 
-        scope: "world", 
-        config: true, 
-        type: Number, 
-        default: 50 
+    game.settings.register(MOD_ID, "eloquence", {
+        name: "Красноречие (Глобальное)",
+        scope: "world",
+        config: true,
+        type: Number,
+        default: 50
     });
 
     // --- 5. ОТЛАДКА И ДИАГНОСТИКА ---
